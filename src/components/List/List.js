@@ -20,6 +20,7 @@ const List = ({
   setRating,
   childClicked,
   isLoading,
+  error,
 }) => {
   const [elRefs, setElRefs] = useState([]);
   const classes = useStyles();
@@ -61,18 +62,27 @@ const List = ({
               onChange={(e) => setRating(e.target.value)}
             >
               <MenuItem value="">All</MenuItem>
-              <MenuItem value="1">1 Star</MenuItem>
-              <MenuItem value="2">2 Stars</MenuItem>
-              <MenuItem value="3">3 Stars</MenuItem>
-              <MenuItem value="4">4 Stars</MenuItem>
-              <MenuItem value="5">5 Stars</MenuItem>
+              <MenuItem value="2">2 Stars & up</MenuItem>
+              <MenuItem value="3">3 Stars & up</MenuItem>
+              <MenuItem value="4">4 Stars & up</MenuItem>
+              <MenuItem value="4.5">4.5 Stars & up</MenuItem>
             </Select>
           </FormControl>
+          {error && (
+            <Typography color="error" className={classes.message}>
+              {error}
+            </Typography>
+          )}
+          {!error && places.length === 0 && (
+            <Typography color="textSecondary" className={classes.message}>
+              No places found here. Try moving the map or changing the filters.
+            </Typography>
+          )}
           <Grid container spacing={3} className={classes.list}>
             {places?.map((place, i) => (
-              <Grid ref={elRefs[i]} key={i} item xs={12}>
+              <Grid ref={elRefs[i]} key={place.location_id || i} item xs={12}>
                 <PlaceDetails
-                  selected={Number(childClicked) === i}
+                  selected={childClicked === i}
                   refProp={elRefs[i]}
                   place={place}
                 />

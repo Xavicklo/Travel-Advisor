@@ -25,5 +25,9 @@ export default makeStyles((theme) => ({
   list: {
     height: "75vh",
     overflow: "auto",
+    [theme.breakpoints.down("sm")]: { height: "auto", maxHeight: "60vh" },
+  },
+  message: {
+    margin: theme.spacing(1, 1, 2),
   },
 }));

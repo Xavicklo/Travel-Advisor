@@ -7,6 +7,9 @@ export default makeStyles(() => ({
   subtitle: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px',
   },
+  selected: {
+    outline: '3px solid #1cb5e0',
+  },
   spacing: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
