@@ -1,6 +1,34 @@
 import { makeStyles } from '@material-ui/core/styles';
 
-export default makeStyles(() => ({
+export default makeStyles((theme) => ({
+  reviewsBox: {
+    background: '#f7f9fb',
+    borderTop: '1px solid #e6eaef',
+  },
+  review: {
+    padding: theme.spacing(1.5, 0),
+    borderBottom: '1px solid #e6eaef',
+    '&:last-of-type': { marginBottom: theme.spacing(1.5) },
+  },
+  reviewText: {
+    marginTop: 6,
+    whiteSpace: 'pre-line',
+    // Long reviews: show 5 lines
+    display: '-webkit-box',
+    WebkitLineClamp: 5,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+  },
+  contact: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    fontSize: 14,
+  },
   chip: {
     margin: '5px 5px 5px 0',
   },

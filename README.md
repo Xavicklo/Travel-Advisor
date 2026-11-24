@@ -10,6 +10,9 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
 - Search any city or place with **Google Places Autocomplete**
 - Filter by type (restaurants, hotels, attractions) and minimum rating
+- **Distance slider (1–50 km):** searches a circle around the map centre, draws the circle on the map and zooms to fit it. Fetches up to 3 pages (60 places).
+- **Sort** by recommended, highest rating, nearest or most reviewed; every card shows its distance (haversine)
+- **Reviews on demand:** "查看評論" loads Google reviews, phone and website with Place Details, only when the user clicks
 - **Food keyword search** (火鍋 hot pot, 涼麵 cold noodles, 咖哩飯 curry rice…): sent to Nearby Search as `keyword`, with quick chips
 - **Category filtering and icons:** results are checked against Google's `types`, so a hotel with a restaurant doesn't appear under restaurants. Each place gets its own icon and colour (restaurant, café, bakery, bar, lodging, attraction) on the map and in the list
 - **Smart labels (marker collision handling):** important places get full cards, the rest become rating dots, and dots that overlap merge into clusters (see below)
@@ -35,7 +38,8 @@ Use the **Smart labels** switch on the map to compare before and after.
 | --- | --- | --- |
 | **Maps JavaScript API** | `components/Map/Map.js` (via `google-map-react`) | Renders the map and applies the custom style JSON in `mapStyles.js`. The `onChange` event returns the visible bounds (north-east and south-west corners), and the app uses these to query places inside that box. |
 | **Places API: Autocomplete** | `components/Header/Header.js` (via `@react-google-maps/api`) | Suggests places as you type. The chosen place's `geometry.location` re-centres the map. Only the `geometry` and `name` fields are requested, to keep Places API cost down. |
-| **Places API: Nearby Search** | `api/places.js` (`PlacesService.nearbySearch`) | Finds restaurants (`restaurant`), hotels (`lodging`) or attractions (`tourist_attraction`) inside the current map bounds, with rating, review count, price level, address and photo. Requests are debounced by 500 ms while the map moves. |
+| **Places API: Nearby Search** | `api/places.js` (`PlacesService.nearbySearch`) | Finds restaurants (`restaurant`), hotels (`lodging`) or attractions (`tourist_attraction`) within `radius` of the map centre, optionally matching a `keyword` (e.g. 火鍋). Returns rating, review count, price level, address and photo, with up to 3 pages through `pagination.nextPage()`. Debounced while the map moves. |
+| **Places API: Place Details** | `api/places.js` (`PlacesService.getDetails`) | Reviews, phone and website for one place. Requested only when the user opens the reviews, and only those `fields`, to keep cost down. |
 | **Maps URLs** | `components/PlaceDetails/PlaceDetails.js` | The "Directions" button opens Google Maps navigation. It needs no API key and is not billed. |
 
 > Earlier versions used the Travel Advisor API on RapidAPI. That endpoint (`list-in-boundary`) was retired, so place data now comes from Google Places as well. The whole app runs on one Google Maps Platform key.

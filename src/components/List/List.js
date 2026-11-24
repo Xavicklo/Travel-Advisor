@@ -11,6 +11,8 @@ import {
   InputAdornment,
   IconButton,
   Chip,
+  Slider,
+  LinearProgress,
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -27,12 +29,19 @@ const List = ({
   setKeyword,
   rating,
   setRating,
+  radiusKm,
+  setRadiusKm,
+  sortBy,
+  setSortBy,
   childClicked,
   isLoading,
+  isLoadingMore,
   error,
+  loadDetails,
 }) => {
   const [elRefs, setElRefs] = useState([]);
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
+  const [radiusDraft, setRadiusDraft] = useState(radiusKm); // slider position while dragging
   const classes = useStyles();
 
   useEffect(() => {
@@ -40,6 +49,7 @@ const List = ({
   }, [places]);
 
   useEffect(() => setDraft(keyword), [keyword]);
+  useEffect(() => setRadiusDraft(radiusKm), [radiusKm]);
 
   const applyKeyword = (value) => setKeyword(value.trim());
 
@@ -70,6 +80,26 @@ const List = ({
           <MenuItem value="4.5">4.5 星以上</MenuItem>
         </Select>
       </FormControl>
+
+      {/* Distance slider: search radius around the map centre (drawn as a circle on the map) */}
+      <div className={classes.radiusBox}>
+        <Typography variant="body2" className={classes.radiusLabel}>
+          搜尋範圍：<strong>{radiusDraft} 公里</strong>
+          <span className={classes.radiusHint}>（以地圖中心為圓心）</span>
+        </Typography>
+        <Slider
+          value={radiusDraft}
+          min={1}
+          max={50}
+          step={1}
+          marks={[1, 5, 10, 20, 30, 50].map((v) => ({ value: v, label: `${v}` }))}
+          valueLabelDisplay="auto"
+          valueLabelFormat={(v) => `${v}km`}
+          onChange={(e, v) => setRadiusDraft(v)} // move the thumb smoothly...
+          onChangeCommitted={(e, v) => setRadiusKm(v)} // ...but only search when the user lets go
+          aria-label="搜尋範圍（公里）"
+        />
+      </div>
 
       {type === 'restaurants' && (
         <div className={classes.keywordBox}>
@@ -133,14 +163,25 @@ const List = ({
             </Typography>
           )}
           {!error && places.length > 0 && (
-            <Typography variant="body2" color="textSecondary" className={classes.message}>
-              找到 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
-            </Typography>
+            <div className={classes.resultBar}>
+              <Typography variant="body2" color="textSecondary">
+                {radiusKm} 公里內找到 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
+              </Typography>
+              <FormControl size="small">
+                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} disableUnderline className={classes.sort}>
+                  <MenuItem value="recommended">推薦排序</MenuItem>
+                  <MenuItem value="rating">評分最高</MenuItem>
+                  <MenuItem value="distance">距離最近</MenuItem>
+                  <MenuItem value="reviews">評論最多</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
           )}
+          {!error && isLoadingMore && places.length > 0 && <LinearProgress className={classes.more} />}
           <Grid container spacing={3} className={classes.list}>
             {places.map((place, i) => (
               <Grid ref={elRefs[i]} key={place.id} item xs={12}>
-                <PlaceDetails selected={childClicked === i} refProp={elRefs[i]} place={place} />
+                <PlaceDetails selected={childClicked === i} refProp={elRefs[i]} place={place} loadDetails={loadDetails} />
               </Grid>
             ))}
           </Grid>
