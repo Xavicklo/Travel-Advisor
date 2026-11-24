@@ -119,9 +119,9 @@ const Map = ({
 
         {layout.dots.map(({ place, index }) => (
           <div className={classes.dotContainer} lat={place.lat} lng={place.lng} key={`p-${index}`}>
-            <div className={classes.dot} title={place.name} style={{ borderColor: getKind(place.kind).color }}>
-              <KindIcon kind={place.kind} classes={classes} size={20} />
-              <span className={classes.dotRating}>{place.rating ? place.rating.toFixed(1) : '–'}</span>
+            {/* Compact marker: just the category icon; name, photo and rating appear on hover */}
+            <div className={classes.dot}>
+              <KindIcon kind={place.kind} classes={classes} size={24} />
             </div>
             {isDesktop && (
               <div className={classes.preview}>
@@ -138,17 +138,36 @@ const Map = ({
           </div>
         )}
 
-        {layout.clusters.map((cluster, i) => (
-          <div
-            className={classes.cluster}
-            lat={cluster.lat}
-            lng={cluster.lng}
-            key={`c-${i}`}
-            title={`${cluster.count} 個地點，點擊放大`}
-          >
-            {cluster.count}
-          </div>
-        ))}
+        {/* Overlapping places: stacked category icons + count; hover lists them, click zooms in */}
+        {layout.clusters.map((cluster, i) => {
+          const members = cluster.indexes.map((idx) => places[idx]).filter(Boolean);
+          return (
+            <div className={classes.clusterContainer} lat={cluster.lat} lng={cluster.lng} key={`c-${i}`}>
+              <div className={classes.cluster}>
+                <span className={classes.stack}>
+                  {members.slice(0, 3).map((p) => (
+                    <span key={p.id} className={classes.stackItem}>
+                      <KindIcon kind={p.kind} classes={classes} size={22} />
+                    </span>
+                  ))}
+                </span>
+                <span className={classes.clusterCount}>+{cluster.count - 1}</span>
+              </div>
+              <div className={classes.clusterTip}>
+                <div className={classes.clusterTipTitle}>這裡有 {cluster.count} 個地點重疊</div>
+                {members.slice(0, 5).map((p) => (
+                  <div key={p.id} className={classes.clusterTipRow}>
+                    <KindIcon kind={p.kind} classes={classes} size={16} />
+                    <span className={classes.clusterTipName}>{p.name}</span>
+                    {p.rating && <span className={classes.clusterTipRating}>★ {p.rating.toFixed(1)}</span>}
+                  </div>
+                ))}
+                {cluster.count > 5 && <div className={classes.clusterTipMore}>還有 {cluster.count - 5} 個…</div>}
+                <div className={classes.clusterTipHint}>🔍 點擊放大查看</div>
+              </div>
+            </div>
+          );
+        })}
       </GoogleMapReact>
 
       {/* Search centre: always the middle of the map, where distances are measured from */}

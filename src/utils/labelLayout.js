@@ -43,7 +43,7 @@ export const layoutLabels = (places, zoom, options = {}) => {
   const {
     cardWidth = 130, // marker card is ~120px wide; add a small gap
     cardHeight = 165,
-    dotSize = 44, // dots (icon + rating, ~56px wide) closer than this are merged into a cluster
+    dotSize = 26, // icons (~26px circles) closer than this overlap, so they're merged into a cluster
     maxCards = 8, // more cards than this is visual noise even if they don't overlap
     selectedIndex = null, // the place selected in the list always gets a card
   } = options;
