@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import GoogleMapReact from 'google-map-react';
 import { Paper, Typography, useMediaQuery, Switch, FormControlLabel } from '@material-ui/core';
 import Rating from '@material-ui/lab/Rating';
+import RoomIcon from '@material-ui/icons/Room';
 
 import useStyles from './styles';
 import mapStyles from '../../mapStyles';
@@ -38,7 +39,9 @@ const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
   </Paper>
 );
 
-const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClicked, childClicked, weather, onMapsLoaded }) => {
+const Map = ({
+  coords, zoom, places, setCoords, setZoom, setBounds, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
+}) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
   const [smartLabels, setSmartLabels] = useState(true);
@@ -123,6 +126,13 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
           </div>
         ))}
 
+        {/* The user's GPS position: a pulsing blue dot, like in Google Maps */}
+        {userLocation && (
+          <div className={classes.userDot} lat={userLocation.lat} lng={userLocation.lng} key="me" title="你的位置">
+            <span className={classes.userPulse} />
+          </div>
+        )}
+
         {layout.clusters.map((cluster, i) => (
           <div
             className={classes.cluster}
@@ -135,6 +145,12 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
           </div>
         ))}
       </GoogleMapReact>
+
+      {/* Search centre: always the middle of the map, where distances are measured from */}
+      <div className={classes.centerMarker} aria-hidden="true">
+        <span className={classes.centerLabel}>搜尋中心</span>
+        <RoomIcon className={classes.centerPin} />
+      </div>
 
       {weatherInfo && (
         <Paper elevation={3} className={classes.weather} aria-label="地圖中心的天氣">

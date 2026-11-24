@@ -27,6 +27,10 @@ const App = () => {
   const [sortBy, setSortBy] = useState('recommended');
 
   const [coords, setCoords] = useState(DEFAULT_COORDS);
+  const [userLocation, setUserLocation] = useState(null); // the user's GPS position (blue dot)
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState('');
+  const [fitNonce, setFitNonce] = useState(0); // bump to zoom the map to the search circle
   const [zoom, setZoom] = useState(14);
   const [bounds, setBounds] = useState(null);
 
@@ -46,9 +50,39 @@ const App = () => {
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      ({ coords: { latitude, longitude } }) => setCoords({ lat: latitude, lng: longitude }),
+      ({ coords: { latitude, longitude } }) => {
+        const here = { lat: latitude, lng: longitude };
+        setUserLocation(here);
+        setCoords(here);
+      },
       () => {}, // permission denied or unavailable: keep DEFAULT_COORDS
       { timeout: 10000 },
+    );
+  }, []);
+
+  // "以我的位置搜尋": move the search centre to the user's GPS position and fit the circle.
+  const locateMe = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocateError('這個瀏覽器不支援定位功能。');
+      return;
+    }
+    setLocating(true);
+    setLocateError('');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords: { latitude, longitude } }) => {
+        const here = { lat: latitude, lng: longitude };
+        setUserLocation(here);
+        setCoords(here);
+        setFitNonce((n) => n + 1);
+        setLocating(false);
+      },
+      (err) => {
+        setLocateError(err.code === err.PERMISSION_DENIED
+          ? '你沒有允許定位：請在網址列左側的設定中允許「位置」權限。'
+          : '目前無法取得你的位置，請稍後再試。');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
   }, []);
 
@@ -75,11 +109,12 @@ const App = () => {
     circleRef.current.setRadius(radiusKm * 1000);
   }, [mapsLoaded, coords, radiusKm]);
 
-  // When the slider changes, zoom the map so the whole circle is visible.
+  // When the slider changes (or after "use my location"), zoom the map so the whole circle is visible.
+  // This effect runs after the one above, so the circle is already at its new centre.
   useEffect(() => {
     if (!mapsLoaded || !circleRef.current) return;
     mapRef.current.fitBounds(circleRef.current.getBounds(), 20);
-  }, [mapsLoaded, radiusKm]);
+  }, [mapsLoaded, radiusKm, fitNonce]);
 
   // Search again when the centre, radius, type or keyword changes.
   useEffect(() => {
@@ -172,6 +207,9 @@ const App = () => {
             sortBy={sortBy}
             setSortBy={setSortBy}
             loadDetails={loadDetails}
+            onLocate={locateMe}
+            locating={locating}
+            locateError={locateError}
           />
         </Grid>
         <Grid item xs={12} md={8}>
@@ -185,6 +223,7 @@ const App = () => {
             childClicked={childClicked}
             places={visiblePlaces}
             weather={weather}
+            userLocation={userLocation}
             onMapsLoaded={(map) => {
               mapRef.current = map;
               setMapsLoaded(true);

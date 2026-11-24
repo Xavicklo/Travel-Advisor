@@ -33,6 +33,14 @@ export default makeStyles((theme) => ({
     borderRadius: 12,
     background: 'rgba(28, 181, 224, 0.08)',
   },
+  locateButton: {
+    margin: theme.spacing(0.5, 0, 1.5),
+    borderRadius: 20,
+    background: 'linear-gradient(to right, #1cb5e0, #000046)',
+  },
+  locateError: {
+    marginBottom: theme.spacing(1),
+  },
   radiusLabel: {
     marginBottom: 4,
   },

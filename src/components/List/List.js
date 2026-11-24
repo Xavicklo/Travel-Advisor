@@ -13,7 +13,9 @@ import {
   Chip,
   Slider,
   LinearProgress,
+  Button,
 } from '@material-ui/core';
+import MyLocationIcon from '@material-ui/icons/MyLocation';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
 
@@ -38,6 +40,9 @@ const List = ({
   isLoadingMore,
   error,
   loadDetails,
+  onLocate,
+  locating,
+  locateError,
 }) => {
   const [elRefs, setElRefs] = useState([]);
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
@@ -99,6 +104,23 @@ const List = ({
           onChangeCommitted={(e, v) => setRadiusKm(v)} // ...but only search when the user lets go
           aria-label="搜尋範圍（公里）"
         />
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          size="small"
+          startIcon={locating ? <CircularProgress size={16} color="inherit" /> : <MyLocationIcon />}
+          onClick={onLocate}
+          disabled={locating}
+          className={classes.locateButton}
+        >
+          {locating ? '定位中…' : '以我的位置搜尋'}
+        </Button>
+        {locateError && (
+          <Typography variant="caption" color="error" component="div" className={classes.locateError}>
+            {locateError}
+          </Typography>
+        )}
       </div>
 
       {type === 'restaurants' && (

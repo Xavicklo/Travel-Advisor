@@ -95,6 +95,64 @@ export default makeStyles((theme) => ({
     boxShadow: `0 0 0 6px ${theme.palette.primary.main}40`,
   },
 
+  // Fixed pin at the centre of the map: the tip of the pin marks the exact centre
+  centerMarker: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    pointerEvents: 'none', // never blocks dragging or clicking the map
+    zIndex: 5,
+  },
+  centerPin: {
+    fontSize: 44,
+    color: '#d32f2f',
+    filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.35))',
+    marginBottom: -4, // the icon has empty space under the tip
+  },
+  centerLabel: {
+    background: '#d32f2f',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 700,
+    padding: '2px 8px',
+    borderRadius: 10,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+    whiteSpace: 'nowrap',
+  },
+
+  // The user's location: blue dot with a pulsing ring
+  userDot: {
+    position: 'absolute',
+    transform: 'translate(-50%, -50%)',
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    background: '#1a73e8',
+    border: '3px solid #fff',
+    boxShadow: '0 0 4px rgba(0,0,0,0.4)',
+    zIndex: 4,
+  },
+  userPulse: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 18,
+    height: 18,
+    marginLeft: -9,
+    marginTop: -9,
+    borderRadius: '50%',
+    background: 'rgba(26, 115, 232, 0.35)',
+    animation: '$pulse 2s ease-out infinite',
+  },
+  '@keyframes pulse': {
+    '0%': { transform: 'scale(1)', opacity: 1 },
+    '100%': { transform: 'scale(3.5)', opacity: 0 },
+  },
+
   weather: {
     position: 'absolute',
     top: 12,
