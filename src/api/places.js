@@ -197,3 +197,27 @@ export const getPlaceDetails = (map, placeId) => {
     );
   });
 };
+
+/**
+ * Typed address or landmark -> its location, e.g. "台北車站" when the user pressed Enter
+ * without picking a suggestion. Find Place with only geometry + name (cheapest fields),
+ * biased to the area the user is looking at.
+ * @returns {Promise<{lat, lng, name}|null>}
+ */
+export const findPlace = (map, text, near) => {
+  const { maps } = window.google;
+  const service = new maps.places.PlacesService(map);
+  return new Promise((resolve) => {
+    service.findPlaceFromQuery(
+      { query: text, fields: ['geometry', 'name'], locationBias: { center: near, radius: MAX_RADIUS_M } },
+      (results, status) => {
+        const loc = results?.[0]?.geometry?.location;
+        if (status !== maps.places.PlacesServiceStatus.OK || !loc) {
+          resolve(null);
+          return;
+        }
+        resolve({ lat: loc.lat(), lng: loc.lng(), name: results[0].name || text });
+      },
+    );
+  });
+};

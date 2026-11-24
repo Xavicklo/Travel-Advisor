@@ -3,10 +3,10 @@ import { CssBaseline, Paper, IconButton, useMediaQuery } from '@material-ui/core
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import { getPlacesData, getPlaceDetails, findNearest } from './api/places';
+import { getPlacesData, getPlaceDetails, findNearest, findPlace } from './api/places';
 import { getWeatherData } from './api/weather';
 import { score } from './utils/labelLayout';
-import { detectCategory } from './utils/categories';
+import { detectCategory, looksLikePlace } from './utils/categories';
 import { distanceKm } from './utils/geo';
 import useLocalStorage from './utils/useLocalStorage';
 import Header from './components/Header/Header';
@@ -315,10 +315,22 @@ const App = () => {
       searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '');
       return;
     }
-    // Typed something and pressed Enter, e.g. "火鍋", "motel", "夜市": an all-in-one search.
-    // Work out the category from the words, then search around the current map view.
     const text = (place?.name || '').trim();
     if (!text) return;
+    // Typed an address or landmark and pressed Enter, e.g. 台北車站: make it the search centre
+    if (looksLikePlace(text) && mapRef.current) {
+      findPlace(mapRef.current, text, coords).then((found) => {
+        if (found) searchAt({ lat: found.lat, lng: found.lng }, found.name);
+        else searchFor(text); // not a real place after all: treat it as something to look for
+      });
+      return;
+    }
+    searchFor(text);
+  };
+
+  // Something to look for, e.g. "火鍋", "motel", "夜市": an all-in-one search.
+  // Work out the category from the words, then search around the current map view.
+  const searchFor = (text) => {
     setType(detectCategory(text));
     setKeyword(text);
     setSelectedPlace(null);
@@ -331,6 +343,8 @@ const App = () => {
       onPlaceChanged={onPlaceChanged}
       onLoad={onLoad}
       mapsLoaded={mapsLoaded}
+      centerText={centerLabel || '目前地圖位置'}
+      centerHint={isDesktop ? '在地圖上按右鍵可更換' : '長按地圖可更換'}
       glass={!isDesktop}
       compact={!isDesktop && headerCompact}
       onExpand={() => setHeaderCompact(false)}
@@ -393,6 +407,7 @@ const App = () => {
       <div className={classes.map}>
         <MapView
           onUserMove={() => !isDesktop && setHeaderCompact(true)}
+          onPickCenter={(point) => searchAt(point, '地圖上選的點')} // long-press / right-click
           setChildClicked={(index) => index != null && visiblePlaces[index] && selectPlace(visiblePlaces[index])}
           setCoords={setCoords}
           coords={coords}

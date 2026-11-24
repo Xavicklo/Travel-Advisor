@@ -14,6 +14,7 @@ const AUTOCOMPLETE_OPTIONS = { fields: ['geometry', 'name'] };
 // `compact`: brand row tucked away while the user pans the map; `onExpand` brings it back
 const Header = ({
   onPlaceChanged, onLoad, mapsLoaded, actions = null, glass = false, compact = false, onExpand,
+  centerText = '', centerHint = '',
 }) => {
   const classes = useStyles();
 
@@ -24,7 +25,7 @@ const Header = ({
       </div>
       <InputBase
         // All-in-one: pick a suggested place to go there, or press Enter to search for it nearby
-        placeholder={mapsLoaded ? '搜尋美食、住宿、景點或地點…' : '地圖載入中…'}
+        placeholder={mapsLoaded ? '輸入地址設中心點，或搜尋美食住宿…' : '地圖載入中…'}
         disabled={!mapsLoaded}
         inputProps={{ 'aria-label': '搜尋美食、住宿、景點或地點' }}
         classes={{ root: classes.inputRoot, input: classes.inputInput }}
@@ -62,6 +63,14 @@ const Header = ({
         </Autocomplete>
       ) : (
         searchBox
+      )}
+      {/* Where distances are measured from, so users know the box can move it */}
+      {centerText && (
+        <div className={classes.centerLine}>
+          <span className={classes.centerPinDot}>📍</span>
+          搜尋中心：<strong className={classes.centerName}>{centerText}</strong>
+          {centerHint && <span className={classes.centerHint}>· {centerHint}</span>}
+        </div>
       )}
     </header>
   );

@@ -87,7 +87,7 @@ const PlaceLabel = ({ place, level, classes, selected = false }) => {
 
 const Map = ({
   coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
-  searchCenter, showSearchHere, onUserMove, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
+  searchCenter, showSearchHere, onUserMove, onPickCenter, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
@@ -105,6 +105,33 @@ const Map = ({
     mapRef.current.setOptions({ styles: theme.styles });
     mapRef.current.setMapTypeId(theme.mapTypeId);
   }, [mapReady, theme]);
+
+  // Long-press (phones) or right-click (desktop) on the map: make that spot the search centre,
+  // like dropping a pin in Google Maps
+  const pickCenterRef = useRef(onPickCenter);
+  pickCenterRef.current = onPickCenter;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return undefined;
+    const { maps } = window.google;
+    let timer = null;
+    let lastPick = 0;
+    const pick = (latLng) => {
+      if (!latLng || Date.now() - lastPick < 1000) return; // contextmenu + timer can both fire
+      lastPick = Date.now();
+      if (navigator.vibrate) navigator.vibrate(30); // small buzz on Android
+      if (pickCenterRef.current) pickCenterRef.current({ lat: latLng.lat(), lng: latLng.lng() });
+    };
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    const listeners = [
+      map.addListener('mousedown', (e) => { cancel(); timer = setTimeout(() => pick(e.latLng), 600); }),
+      map.addListener('mouseup', cancel),
+      map.addListener('dragstart', cancel),
+      map.addListener('zoom_changed', cancel),
+      map.addListener('contextmenu', (e) => { cancel(); pick(e.latLng); }),
+    ];
+    return () => { cancel(); listeners.forEach((l) => maps.event.removeListener(l)); };
+  }, [mapReady]);
 
   const layout = useMemo(() => {
     if (labelMode === 'all') {

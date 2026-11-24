@@ -74,3 +74,16 @@ export const detectCategory = (text) => {
   if (ATTRACTION_WORDS.test(text)) return 'attractions';
   return 'restaurants';
 };
+
+// Words that mean "this is a place to go to", e.g. 台北車站, 忠孝東路, 信義區, 台大醫院
+const PLACE_WORDS = /(路|街|巷|弄|號|段|區|市|縣|鄉|鎮|村|車站|火車站|高鐵|捷運|機場|大學|醫院|大樓|廣場|商圈|百貨|101|station|road|street|district|airport)/i;
+
+/**
+ * Does typed text look like an address or landmark (move the search centre there)
+ * rather than something to look for (火鍋, 汽車旅館)? A quick keyword is never a place.
+ */
+export const looksLikePlace = (text) => {
+  const t = text.trim();
+  if (Object.values(QUICK_KEYWORDS).some((words) => words.includes(t))) return false;
+  return PLACE_WORDS.test(t);
+};
