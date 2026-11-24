@@ -66,7 +66,9 @@ export const layoutLabels = (places, zoom, options = {}) => {
       y1: item.y - cardHeight / 2,
       y2: item.y + cardHeight / 2,
     };
-    const fits = cards.length < maxCards && !cards.some((card) => overlaps(card.box, box));
+    // The selected place always gets a card; the rest only if there's room
+    const isSelected = item.index === selectedIndex;
+    const fits = isSelected || (cards.length < maxCards && !cards.some((card) => overlaps(card.box, box)));
     if (fits) cards.push({ ...item, box, hiddenCount: 0 });
     else leftovers.push(item);
   });

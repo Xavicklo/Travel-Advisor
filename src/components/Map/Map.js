@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { Paper, Typography, useMediaQuery, Switch, FormControlLabel } from '@material-ui/core';
+import { Paper, Typography, useMediaQuery } from '@material-ui/core';
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Rating from '@material-ui/lab/Rating';
 import RoomIcon from '@material-ui/icons/Room';
 
@@ -44,15 +46,18 @@ const Map = ({
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
-  const [smartLabels, setSmartLabels] = useState(true);
+  // icons: every place is a small icon (default) · smart: collision-aware cards · all: every place is a card
+  const [labelMode, setLabelMode] = useState('icons');
 
-  // Before: every place is a full card. After: collision-aware cards, dots and clusters.
   const layout = useMemo(() => {
-    if (!smartLabels) {
+    if (labelMode === 'all') {
       return { cards: places.map((place, index) => ({ place, index, hiddenCount: 0 })), dots: [], clusters: [] };
     }
-    return layoutLabels(places, zoom, { selectedIndex: childClicked });
-  }, [places, zoom, smartLabels, childClicked]);
+    return layoutLabels(places, zoom, {
+      selectedIndex: childClicked, // the clicked place still opens as a card
+      maxCards: labelMode === 'icons' ? 0 : 8,
+    });
+  }, [places, zoom, labelMode, childClicked]);
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
@@ -164,15 +169,20 @@ const Map = ({
       )}
 
       <Paper elevation={3} className={classes.labelToggle}>
-        <FormControlLabel
-          control={<Switch checked={smartLabels} onChange={(e) => setSmartLabels(e.target.checked)} color="primary" size="small" />}
-          label="智慧標籤"
-        />
-        {smartLabels && (
-          <Typography variant="caption" color="textSecondary" component="div">
-            卡片 {layout.cards.length} · 圓點 {layout.dots.length} · 群集 {layout.clusters.length}
-          </Typography>
-        )}
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={labelMode}
+          onChange={(e, value) => value && setLabelMode(value)}
+          aria-label="標籤顯示方式"
+        >
+          <ToggleButton value="icons" className={classes.modeButton}>圖示</ToggleButton>
+          <ToggleButton value="smart" className={classes.modeButton}>智慧卡片</ToggleButton>
+          <ToggleButton value="all" className={classes.modeButton}>全部卡片</ToggleButton>
+        </ToggleButtonGroup>
+        <Typography variant="caption" color="textSecondary" component="div" className={classes.modeStats}>
+          卡片 {layout.cards.length} · 圖示 {layout.dots.length} · 群集 {layout.clusters.length}
+        </Typography>
       </Paper>
     </div>
   );

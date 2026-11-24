@@ -33,7 +33,7 @@ When 20 places are drawn as 120×150 px cards, they overlap and nothing is reada
 3. **Place cards greedily** in rank order, skipping any card whose box overlaps one already placed (max 8 cards).
 4. Places that didn't fit become **rating dots** (hover to preview the card). Dots hidden under a card show as "+N nearby" on that card. Dots that overlap each other merge into a numbered **cluster**; click a cluster to zoom in.
 
-Use the **Smart labels** switch on the map to compare before and after.
+The map's **圖示 / 智慧卡片 / 全部卡片** toggle switches between icons only (default, the clicked place opens as a card), smart cards, and every place as a card (the original behaviour), to compare before and after.
 
 ## How the Google Maps Platform is used
 

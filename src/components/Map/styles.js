@@ -170,7 +170,18 @@ export default makeStyles((theme) => ({
     position: 'absolute',
     top: 12,
     right: 12,
-    padding: '4px 12px 6px',
+    padding: 6,
+    borderRadius: 10,
+  },
+  modeButton: {
+    padding: '4px 10px',
+    fontSize: 13,
+    fontWeight: 600,
+    lineHeight: 1.4,
+  },
+  modeStats: {
+    marginTop: 4,
+    textAlign: 'center',
   },
   missingKey: {
     padding: theme.spacing(3),
