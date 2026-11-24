@@ -43,18 +43,67 @@ export default makeStyles((theme) => ({
     display: 'grid',
     gridTemplateColumns: '1fr',
     gap: theme.spacing(0.5),
-    padding: theme.spacing(1, 2, 0),
-    borderRadius: 12,
-    background: 'rgba(28, 181, 224, 0.08)',
+    padding: theme.spacing(1.5, 3, 0.5),
+    borderRadius: 16,
+    background: '#e4e9f0', // soft grey so the raised knobs and sunken tracks read as 3D
   },
   sliderLabel: {
     fontSize: 13,
+    marginLeft: -8,
   },
+  // Soft 3D (neumorphic) slider: a sunken pill track and a big raised round knob
   slider: {
-    '& .MuiSlider-markLabel': { fontSize: 11 },
+    height: 22,
+    padding: '16px 0 28px',
+    color: '#5b7392', // filled part: slate blue
+    '& .MuiSlider-rail': {
+      height: 22,
+      borderRadius: 11,
+      opacity: 1,
+      background: '#dde3ea',
+      boxShadow: 'inset 3px 3px 6px rgba(150, 165, 190, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.9)',
+    },
+    '& .MuiSlider-track': {
+      height: 22,
+      borderRadius: 11,
+      background: 'linear-gradient(90deg, #7c90aa, #556c8b)',
+      boxShadow: 'inset 2px 2px 5px rgba(30, 45, 70, 0.45)',
+    },
+    '& .MuiSlider-thumb': {
+      width: 40,
+      height: 40,
+      marginTop: -9, // (22 - 40) / 2: centred on the track
+      marginLeft: -20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(145deg, #f6f8fb, #dfe5ec)',
+      boxShadow: '4px 4px 10px rgba(110, 125, 150, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.95)',
+      transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+      '&:hover, &.Mui-focusVisible': {
+        boxShadow: '4px 4px 10px rgba(110, 125, 150, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.95), 0 0 0 6px rgba(91, 115, 146, 0.18)',
+      },
+      '&.MuiSlider-active': {
+        transform: 'scale(1.08)',
+        boxShadow: '2px 2px 6px rgba(110, 125, 150, 0.6), -2px -2px 5px rgba(255, 255, 255, 0.95), 0 0 0 8px rgba(91, 115, 146, 0.2)',
+      },
+    },
+    '& .MuiSlider-valueLabel': {
+      left: 4, // centre the bubble over the 40px knob
+      top: -36,
+    },
+    '& .MuiSlider-mark': { display: 'none' }, // tick dots look odd inside the sunken track
+    '& .MuiSlider-markLabel': { fontSize: 11, top: 46, color: theme.palette.text.secondary },
   },
   ratingSlider: {
-    color: '#f5a623', // star colour
+    color: '#f5a623', // value bubble in star colour
+    '& .MuiSlider-track': {
+      background: 'linear-gradient(90deg, #f7c46c, #f0a020)',
+      boxShadow: 'inset 2px 2px 5px rgba(140, 80, 0, 0.35)',
+    },
+    '& .MuiSlider-thumb:hover, & .MuiSlider-thumb.Mui-focusVisible': {
+      boxShadow: '4px 4px 10px rgba(110, 125, 150, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.95), 0 0 0 6px rgba(245, 166, 35, 0.22)',
+    },
   },
 
   tabs: {

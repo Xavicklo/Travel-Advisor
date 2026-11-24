@@ -22,6 +22,8 @@ import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import RestaurantIcon from '@material-ui/icons/Restaurant';
 import HotelIcon from '@material-ui/icons/Hotel';
 import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
+import RoomIcon from '@material-ui/icons/Room';
+import StarIcon from '@material-ui/icons/Star';
 
 import PlaceDetails from '../PlaceDetails/PlaceDetails';
 import PlaceRow from '../PlaceRow/PlaceRow';
@@ -43,6 +45,25 @@ const RATING_MARKS = [
   { value: indexForRating(3) },
   ...[4, 4.5, 4.9].map((stars) => ({ value: indexForRating(stars), label: `${stars}` })),
 ];
+
+// Big round slider knobs with an icon, easy to grab with a thumb on a phone.
+// MUI passes the value bubble as children, so keep rendering them.
+function RadiusThumb(props) {
+  return (
+    <span {...props}>
+      <RoomIcon style={{ fontSize: 20, color: '#4a6382' }} />
+      {props.children}
+    </span>
+  );
+}
+function RatingThumb(props) {
+  return (
+    <span {...props}>
+      <StarIcon style={{ fontSize: 20, color: '#f5a623' }} />
+      {props.children}
+    </span>
+  );
+}
 
 const TYPES = [
   { value: 'restaurants', label: '餐廳', Icon: RestaurantIcon },
@@ -224,6 +245,7 @@ const List = ({
               onChange={(e, i) => setRadiusIndex(i)} // move the thumb smoothly...
               onChangeCommitted={(e, i) => setRadiusKm(RADIUS_STEPS[i])} // ...but only search when released
               aria-label="搜尋範圍"
+              ThumbComponent={RadiusThumb}
               className={classes.slider}
             />
           </div>
@@ -242,6 +264,7 @@ const List = ({
               onChange={(e, i) => setRatingIndex(i)}
               onChangeCommitted={(e, i) => setRating(RATING_STEPS[i])} // filtering is local, no API call
               aria-label="最低評分"
+              ThumbComponent={RatingThumb}
               className={`${classes.slider} ${classes.ratingSlider}`}
             />
           </div>
