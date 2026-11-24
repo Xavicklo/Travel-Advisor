@@ -41,6 +41,20 @@ export default makeStyles((theme) => ({
   locateError: {
     marginBottom: theme.spacing(1),
   },
+  sliders: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: theme.spacing(3),
+    // Stack them when the panel is too narrow for two sliders
+    [theme.breakpoints.between('md', 'md')]: { gridTemplateColumns: '1fr' },
+    '@media (max-width: 420px)': { gridTemplateColumns: '1fr' },
+  },
+  slider: {
+    '& .MuiSlider-markLabel': { fontSize: 11 },
+  },
+  ratingSlider: {
+    color: '#f5a623', // star colour
+  },
   radiusLabel: {
     marginBottom: 4,
   },

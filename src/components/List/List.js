@@ -24,10 +24,21 @@ import ClearIcon from '@material-ui/icons/Clear';
 
 import PlaceDetails from '../PlaceDetails/PlaceDetails';
 import { FOOD_KEYWORDS } from '../../utils/categories';
+import {
+  RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
+} from '../../utils/radius';
 import useStyles from './styles';
 
 // Smallest whole-km radius that reaches the nearest match (and is bigger than the current one).
-const expandTo = (nearest, radiusKm) => Math.max(Math.ceil(nearest.distanceKm), radiusKm + 1);
+const expandTo = (nearest, radiusKm) => nextRadiusCovering(nearest.distanceKm, radiusKm);
+
+// Distance slider marks: label only a few steps so they don't overlap
+const RADIUS_MARKS = [0.1, 1, 5, 20, 50].map((km) => ({ value: indexForRadius(km), label: shortRadius(km) }));
+// Rating slider: 0 means no minimum ("不限"), then 1-5 stars in half-star steps
+const RATING_MARKS = [
+  { value: 0, label: '不限' }, { value: 3, label: '3' }, { value: 4, label: '4' }, { value: 5, label: '5' },
+];
+const formatRating = (value) => (value ? `${value} 星以上` : '不限');
 
 const List = ({
   places,
@@ -62,7 +73,9 @@ const List = ({
 }) => {
   const [elRefs, setElRefs] = useState([]);
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
-  const [radiusDraft, setRadiusDraft] = useState(radiusKm); // slider position while dragging
+  // Slider positions while dragging. The distance slider moves over step indexes (see utils/radius.js).
+  const [radiusIndex, setRadiusIndex] = useState(indexForRadius(radiusKm));
+  const [ratingDraft, setRatingDraft] = useState(rating);
   const [tab, setTab] = useState('results'); // results | favorites
   const classes = useStyles();
 
@@ -71,7 +84,8 @@ const List = ({
   }, [places]);
 
   useEffect(() => setDraft(keyword), [keyword]);
-  useEffect(() => setRadiusDraft(radiusKm), [radiusKm]);
+  useEffect(() => setRadiusIndex(indexForRadius(radiusKm)), [radiusKm]);
+  useEffect(() => setRatingDraft(rating), [rating]);
 
   const applyKeyword = (value) => setKeyword(value.trim());
 
@@ -92,35 +106,49 @@ const List = ({
           <MenuItem value="attractions">景點</MenuItem>
         </Select>
       </FormControl>
-      <FormControl className={classes.formControl}>
-        <InputLabel id="rating">評分</InputLabel>
-        <Select id="rating" value={rating} onChange={(e) => setRating(e.target.value)}>
-          <MenuItem value="">全部</MenuItem>
-          <MenuItem value="2">2 星以上</MenuItem>
-          <MenuItem value="3">3 星以上</MenuItem>
-          <MenuItem value="4">4 星以上</MenuItem>
-          <MenuItem value="4.5">4.5 星以上</MenuItem>
-        </Select>
-      </FormControl>
-
-      {/* Distance slider: search radius around the map centre (drawn as a circle on the map) */}
       <div className={classes.radiusBox}>
-        <Typography variant="body2" className={classes.radiusLabel}>
-          搜尋範圍：<strong>{radiusDraft} 公里</strong>
-          <span className={classes.radiusHint}>（以地圖中心為圓心）</span>
+        {/* Two sliders side by side: distance (searches) and minimum rating (filters instantly) */}
+        <div className={classes.sliders}>
+          <div>
+            <Typography variant="body2" className={classes.radiusLabel}>
+              搜尋範圍：<strong>{formatRadius(RADIUS_STEPS[radiusIndex])}</strong>
+            </Typography>
+            <Slider
+              value={radiusIndex}
+              min={0}
+              max={RADIUS_STEPS.length - 1}
+              step={1}
+              marks={RADIUS_MARKS}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(i) => shortRadius(RADIUS_STEPS[i])}
+              onChange={(e, i) => setRadiusIndex(i)} // move the thumb smoothly...
+              onChangeCommitted={(e, i) => setRadiusKm(RADIUS_STEPS[i])} // ...but only search when released
+              aria-label="搜尋範圍"
+              className={classes.slider}
+            />
+          </div>
+          <div>
+            <Typography variant="body2" className={classes.radiusLabel}>
+              評分：<strong>{formatRating(ratingDraft)}</strong>
+            </Typography>
+            <Slider
+              value={ratingDraft}
+              min={0}
+              max={5}
+              step={0.5}
+              marks={RATING_MARKS}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(v) => (v ? `${v}★` : '不限')}
+              onChange={(e, v) => setRatingDraft(v)}
+              onChangeCommitted={(e, v) => setRating(v)} // filtering is local, no API call
+              aria-label="最低評分"
+              className={`${classes.slider} ${classes.ratingSlider}`}
+            />
+          </div>
+        </div>
+        <Typography variant="caption" className={classes.radiusHint} component="div">
+          以紅色「搜尋中心」圖釘為圓心；評分篩選不會重新查詢
         </Typography>
-        <Slider
-          value={radiusDraft}
-          min={1}
-          max={50}
-          step={1}
-          marks={[1, 5, 10, 20, 30, 50].map((v) => ({ value: v, label: `${v}` }))}
-          valueLabelDisplay="auto"
-          valueLabelFormat={(v) => `${v}km`}
-          onChange={(e, v) => setRadiusDraft(v)} // move the thumb smoothly...
-          onChangeCommitted={(e, v) => setRadiusKm(v)} // ...but only search when the user lets go
-          aria-label="搜尋範圍（公里）"
-        />
         <Button
           fullWidth
           variant="contained"
@@ -182,7 +210,7 @@ const List = ({
                     variant="outlined"
                     color="primary"
                     clickable
-                    label={`${search.keyword} · ${search.radiusKm} 公里 · ${search.label}`}
+                    label={`${search.keyword} · ${formatRadius(search.radiusKm)} · ${search.label}`}
                     onClick={() => onApplySearch(search)}
                     onDelete={() => onRemoveSearch(search.id)}
                     className={classes.recentChip}
@@ -259,7 +287,7 @@ const List = ({
           {!error && places.length === 0 && (
             <Typography color="textSecondary" className={classes.message}>
               {keyword
-                ? `${radiusKm} 公里內沒有找到「${keyword}」。`
+                ? `${formatRadius(radiusKm)}內沒有找到「${keyword}」。`
                 : '這個範圍內沒有找到地點，試著移動地圖或調整篩選條件。'}
             </Typography>
           )}
@@ -270,7 +298,7 @@ const List = ({
                 最近的「{keyword}」是 <strong>{nearest.name}</strong>，
                 距離約 <strong>{nearest.distanceKm.toFixed(1)} 公里</strong>。
               </Typography>
-              {expandTo(nearest, radiusKm) <= 50 && (
+              {expandTo(nearest, radiusKm) && (
                 <Button
                   variant="outlined"
                   color="primary"
@@ -278,7 +306,7 @@ const List = ({
                   className={classes.expandButton}
                   onClick={() => setRadiusKm(expandTo(nearest, radiusKm))}
                 >
-                  擴大範圍到 {expandTo(nearest, radiusKm)} 公里
+                  擴大範圍到 {formatRadius(expandTo(nearest, radiusKm))}
                 </Button>
               )}
             </div>
@@ -286,7 +314,7 @@ const List = ({
           {!error && places.length > 0 && (
             <div className={classes.resultBar}>
               <Typography variant="body2" color="textSecondary">
-                {radiusKm} 公里內找到 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
+                {formatRadius(radiusKm)}內找到 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
               </Typography>
               <FormControl size="small">
                 <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} disableUnderline className={classes.sort}>

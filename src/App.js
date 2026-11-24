@@ -28,7 +28,7 @@ const withReviews = (list) => list.filter((place) => place.reviews > 0);
 
 const App = () => {
   const [type, setType] = useState('restaurants');
-  const [rating, setRating] = useState('');
+  const [rating, setRating] = useState(0); // minimum stars, 0 = no minimum (rating slider)
   const [keyword, setKeyword] = useState(''); // food keyword, e.g. 火鍋 (restaurants only)
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM); // distance slider
   const [sortBy, setSortBy] = useState('recommended');
@@ -242,7 +242,7 @@ const App = () => {
   }, [places, rating, sortBy]);
 
   // Show "搜尋這個區域" once the map has moved noticeably away from the search centre.
-  const movedAway = distanceKm(coords, searchCenter) > Math.max(0.3, radiusKm * 0.25);
+  const movedAway = distanceKm(coords, searchCenter) > Math.max(0.05, radiusKm * 0.3);
   const searchHere = () => searchAt(coords, '');
 
   const loadDetails = useCallback((placeId) => getPlaceDetails(mapRef.current, placeId), []);

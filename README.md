@@ -10,7 +10,7 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
 - Search any city or place with **Google Places Autocomplete**
 - Filter by type (restaurants, hotels, attractions) and minimum rating
-- **Distance slider (1–50 km):** searches a circle around the search centre, draws the circle on the map and zooms to fit it. 20 results first; 載入更多 fetches up to 60.
+- **Distance slider (100 m – 50 km, non-linear steps: fine up close, coarse far away) and a minimum-rating slider side by side.** The distance slider searches a circle around the search centre, draws the circle on the map and zooms to fit it. 20 results first; 載入更多 fetches up to 60.
 - **Search centre pin** fixed at the middle of the map (distances are measured from here) and a **"以我的位置搜尋"** button that moves the search to your GPS position, shown as a pulsing blue dot
 - **No results? Nearest match:** if nothing matches inside the circle, a Text Search finds the closest match (e.g. the nearest 陶板屋) and offers "擴大範圍到 N 公里"
 - **Recent searches and favourites** saved in the browser (localStorage): one click re-runs "麻辣鍋 · 3 公里 · 我的位置", and the ♥ on a card saves the place to the 我的收藏 tab. No account or database needed.
