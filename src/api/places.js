@@ -98,6 +98,32 @@ export const getPlacesData = (map, type, area, keyword = '', { onMore, isCancell
   });
 };
 
+/**
+ * Nearest match for a keyword when nothing is inside the circle, e.g. "陶板屋" with a 3 km radius.
+ * Uses Text Search (searches by name, not limited to the radius) and returns the closest result.
+ * @returns {Promise<{name, distanceKm}|null>}
+ */
+export const findNearest = (map, type, center, keyword) => {
+  const { maps } = window.google;
+  const service = new maps.places.PlacesService(map);
+  return new Promise((resolve) => {
+    service.textSearch(
+      { query: keyword, location: center, radius: MAX_RADIUS_M, type: PLACE_TYPES[type] },
+      (results, status) => {
+        if (status !== maps.places.PlacesServiceStatus.OK || !results?.length) {
+          resolve(null);
+          return;
+        }
+        const nearest = results
+          .filter((r) => r.geometry?.location && belongsTo(r.types, type))
+          .map((r) => normalizePlace(r, type, center))
+          .sort((a, b) => a.distanceKm - b.distanceKm)[0];
+        resolve(nearest ? { name: nearest.name, distanceKm: nearest.distanceKm } : null);
+      },
+    );
+  });
+};
+
 /** Reviews and contact info for one place (Place Details: billed, so only on demand). */
 export const getPlaceDetails = (map, placeId) => {
   const { maps } = window.google;

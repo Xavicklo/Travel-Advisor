@@ -48,6 +48,17 @@ export default makeStyles((theme) => ({
     color: theme.palette.text.secondary,
     fontSize: 12,
   },
+  nearestBox: {
+    margin: theme.spacing(0, 1, 2),
+    padding: theme.spacing(1.5, 2),
+    borderRadius: 12,
+    background: '#fff8e1',
+    border: '1px solid #ffe082',
+  },
+  expandButton: {
+    marginTop: theme.spacing(1),
+    borderRadius: 16,
+  },
   resultBar: {
     display: 'flex',
     justifyContent: 'space-between',

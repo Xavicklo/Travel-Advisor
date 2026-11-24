@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { CssBaseline, Grid } from '@material-ui/core';
 
-import { getPlacesData, getPlaceDetails } from './api/places';
+import { getPlacesData, getPlaceDetails, findNearest } from './api/places';
 import { getWeatherData } from './api/weather';
 import { score } from './utils/labelLayout';
 import Header from './components/Header/Header';
@@ -37,6 +37,7 @@ const App = () => {
   const [weather, setWeather] = useState(null);
   const [places, setPlaces] = useState([]);
   const [error, setError] = useState('');
+  const [nearest, setNearest] = useState(null); // closest match outside the circle when nothing is inside
 
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const mapRef = useRef(null); // google.maps.Map instance, needed by PlacesService
@@ -141,6 +142,12 @@ const App = () => {
         .then((data) => {
           if (cancelled) return;
           setPlaces(data.filter((place) => place.reviews > 0));
+          setNearest(null);
+          // Nothing inside the circle for this keyword: find the closest one outside it.
+          const activeKeyword = type === 'restaurants' ? keyword.trim() : '';
+          if (data.length === 0 && activeKeyword) {
+            findNearest(mapRef.current, type, center, activeKeyword).then((n) => !cancelled && setNearest(n));
+          }
           setChildClicked(null);
           setTimeout(() => !cancelled && setIsLoadingMore(false), 5000); // pages 2-3 take ~2 s each
         })
@@ -207,6 +214,7 @@ const App = () => {
             sortBy={sortBy}
             setSortBy={setSortBy}
             loadDetails={loadDetails}
+            nearest={nearest}
             onLocate={locateMe}
             locating={locating}
             locateError={locateError}

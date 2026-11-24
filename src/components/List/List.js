@@ -23,6 +23,9 @@ import PlaceDetails from '../PlaceDetails/PlaceDetails';
 import { FOOD_KEYWORDS } from '../../utils/categories';
 import useStyles from './styles';
 
+// Smallest whole-km radius that reaches the nearest match (and is bigger than the current one).
+const expandTo = (nearest, radiusKm) => Math.max(Math.ceil(nearest.distanceKm), radiusKm + 1);
+
 const List = ({
   places,
   type,
@@ -40,6 +43,7 @@ const List = ({
   isLoadingMore,
   error,
   loadDetails,
+  nearest,
   onLocate,
   locating,
   locateError,
@@ -180,9 +184,29 @@ const List = ({
           {!error && places.length === 0 && (
             <Typography color="textSecondary" className={classes.message}>
               {keyword
-                ? `這個範圍內沒有找到「${keyword}」，試著移動地圖或換個關鍵字。`
+                ? `${radiusKm} 公里內沒有找到「${keyword}」。`
                 : '這個範圍內沒有找到地點，試著移動地圖或調整篩選條件。'}
             </Typography>
+          )}
+          {/* Suggest the nearest match outside the circle, with a one-click bigger radius */}
+          {!error && places.length === 0 && keyword && nearest && (
+            <div className={classes.nearestBox}>
+              <Typography variant="body2">
+                最近的「{keyword}」是 <strong>{nearest.name}</strong>，
+                距離約 <strong>{nearest.distanceKm.toFixed(1)} 公里</strong>。
+              </Typography>
+              {expandTo(nearest, radiusKm) <= 50 && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  className={classes.expandButton}
+                  onClick={() => setRadiusKm(expandTo(nearest, radiusKm))}
+                >
+                  擴大範圍到 {expandTo(nearest, radiusKm)} 公里
+                </Button>
+              )}
+            </div>
           )}
           {!error && places.length > 0 && (
             <div className={classes.resultBar}>
