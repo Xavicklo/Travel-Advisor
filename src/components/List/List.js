@@ -1,9 +1,7 @@
-import React, { useState, useEffect, createRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CircularProgress,
-  Grid,
   Typography,
-  InputLabel,
   MenuItem,
   FormControl,
   Select,
@@ -18,28 +16,40 @@ import {
 } from '@material-ui/core';
 import HistoryIcon from '@material-ui/icons/History';
 import FavoriteIcon from '@material-ui/icons/Favorite';
-import MyLocationIcon from '@material-ui/icons/MyLocation';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import RestaurantIcon from '@material-ui/icons/Restaurant';
+import HotelIcon from '@material-ui/icons/Hotel';
+import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
 
 import PlaceDetails from '../PlaceDetails/PlaceDetails';
+import PlaceRow from '../PlaceRow/PlaceRow';
 import { FOOD_KEYWORDS } from '../../utils/categories';
 import {
   RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
 } from '../../utils/radius';
 import useStyles from './styles';
 
-// Smallest whole-km radius that reaches the nearest match (and is bigger than the current one).
+// Smallest radius step that reaches the nearest match (and is bigger than the current one).
 const expandTo = (nearest, radiusKm) => nextRadiusCovering(nearest.distanceKm, radiusKm);
 
-// Distance slider marks: label only a few steps so they don't overlap
-const RADIUS_MARKS = [0.1, 1, 5, 20, 50].map((km) => ({ value: indexForRadius(km), label: shortRadius(km) }));
+// Distance slider marks: label only a few steps so they don't overlap in the narrow panel
+const RADIUS_MARKS = [0.1, 1, 10, 50].map((km) => ({ value: indexForRadius(km), label: shortRadius(km) }));
 // Rating slider: 0 means no minimum ("不限"), then 1-5 stars in half-star steps
-const RATING_MARKS = [
-  { value: 0, label: '不限' }, { value: 3, label: '3' }, { value: 4, label: '4' }, { value: 5, label: '5' },
-];
+const RATING_MARKS = [{ value: 0, label: '不限' }, { value: 3, label: '3' }, { value: 4, label: '4' }, { value: 5, label: '5' }];
 const formatRating = (value) => (value ? `${value} 星以上` : '不限');
 
+const TYPES = [
+  { value: 'restaurants', label: '餐廳', Icon: RestaurantIcon },
+  { value: 'hotels', label: '住宿', Icon: HotelIcon },
+  { value: 'attractions', label: '景點', Icon: PhotoCameraIcon },
+];
+
+/**
+ * Content of the floating side panel (bottom sheet on phones), like Google Maps:
+ * filters + compact result rows, or the details of the selected place.
+ */
 const List = ({
   places,
   type,
@@ -52,7 +62,9 @@ const List = ({
   setRadiusKm,
   sortBy,
   setSortBy,
-  childClicked,
+  selectedPlace,
+  onSelectPlace,
+  onBack,
   isLoading,
   isLoadingMore,
   hasMore,
@@ -60,28 +72,20 @@ const List = ({
   error,
   loadDetails,
   nearest,
-  onLocate,
-  locating,
-  locateError,
   recentSearches = [],
   onApplySearch,
   onRemoveSearch,
   favorites = [],
   favoriteIds,
   onToggleFavorite,
-  onShowOnMap,
+  onSelectFavorite,
 }) => {
-  const [elRefs, setElRefs] = useState([]);
+  const classes = useStyles();
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
   // Slider positions while dragging. The distance slider moves over step indexes (see utils/radius.js).
   const [radiusIndex, setRadiusIndex] = useState(indexForRadius(radiusKm));
   const [ratingDraft, setRatingDraft] = useState(rating);
   const [tab, setTab] = useState('results'); // results | favorites
-  const classes = useStyles();
-
-  useEffect(() => {
-    setElRefs((refs) => Array(places.length).fill().map((_, i) => refs[i] || createRef()));
-  }, [places]);
 
   useEffect(() => setDraft(keyword), [keyword]);
   useEffect(() => setRadiusIndex(indexForRadius(radiusKm)), [radiusKm]);
@@ -94,24 +98,117 @@ const List = ({
     if (value !== 'restaurants') setKeyword(''); // food keywords only make sense for restaurants
   };
 
-  return (
-    <div className={classes.container}>
-      <Typography variant="h6">探索附近好去處</Typography>
+  // ---- Details of one place (replaces the list, like Google Maps) ----
+  if (selectedPlace) {
+    return (
+      <div>
+        <div className={classes.detailBar}>
+          <Button startIcon={<ArrowBackIcon />} onClick={onBack} color="primary">
+            返回結果
+          </Button>
+        </div>
+        <PlaceDetails
+          key={selectedPlace.id}
+          place={selectedPlace}
+          loadDetails={loadDetails}
+          isFavorite={favoriteIds?.has(selectedPlace.id)}
+          onToggleFavorite={onToggleFavorite}
+          variant="panel"
+        />
+      </div>
+    );
+  }
 
-      <FormControl className={classes.formControl}>
-        <InputLabel id="type">類別</InputLabel>
-        <Select id="type" value={type} onChange={(e) => changeType(e.target.value)}>
-          <MenuItem value="restaurants">餐廳</MenuItem>
-          <MenuItem value="hotels">住宿</MenuItem>
-          <MenuItem value="attractions">景點</MenuItem>
-        </Select>
-      </FormControl>
-      <div className={classes.radiusBox}>
+  return (
+    <div>
+      <div className={classes.filters}>
+        {/* Category: segmented chips */}
+        <div className={classes.typeRow}>
+          {TYPES.map(({ value, label, Icon }) => (
+            <Chip
+              key={value}
+              icon={<Icon style={{ fontSize: 18 }} />}
+              label={label}
+              clickable
+              color={type === value ? 'primary' : 'default'}
+              variant={type === value ? 'default' : 'outlined'}
+              onClick={() => changeType(value)}
+              className={classes.typeChip}
+            />
+          ))}
+        </div>
+
+        {type === 'restaurants' && (
+          <>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              placeholder="想吃什麼？例如：火鍋、涼麵、咖哩飯"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') applyKeyword(draft);
+              }}
+              InputProps={{
+                className: classes.keywordInput,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {draft && (
+                      <IconButton size="small" aria-label="清除" onClick={() => applyKeyword('')}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                    <IconButton size="small" aria-label="搜尋" onClick={() => applyKeyword(draft)}>
+                      <SearchIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <div className={classes.chips}>
+              {FOOD_KEYWORDS.map((word) => (
+                <Chip
+                  key={word}
+                  label={word}
+                  size="small"
+                  clickable
+                  color={keyword === word ? 'primary' : 'default'}
+                  onClick={() => applyKeyword(keyword === word ? '' : word)}
+                />
+              ))}
+            </div>
+            {/* Recent keyword searches (saved in the browser): one click restores place, radius and keyword */}
+            {recentSearches.length > 0 && (
+              <div className={classes.recent}>
+                <Typography variant="caption" color="textSecondary" className={classes.recentTitle}>
+                  <HistoryIcon fontSize="inherit" /> 最近搜尋
+                </Typography>
+                <div className={classes.chips}>
+                  {recentSearches.map((search) => (
+                    <Chip
+                      key={search.id}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      clickable
+                      label={`${search.keyword} · ${formatRadius(search.radiusKm)} · ${search.label}`}
+                      onClick={() => onApplySearch(search)}
+                      onDelete={() => onRemoveSearch(search.id)}
+                      className={classes.recentChip}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
         {/* Two sliders side by side: distance (searches) and minimum rating (filters instantly) */}
         <div className={classes.sliders}>
           <div>
-            <Typography variant="body2" className={classes.radiusLabel}>
-              搜尋範圍：<strong>{formatRadius(RADIUS_STEPS[radiusIndex])}</strong>
+            <Typography variant="body2" className={classes.sliderLabel}>
+              範圍 <strong>{formatRadius(RADIUS_STEPS[radiusIndex])}</strong>
             </Typography>
             <Slider
               value={radiusIndex}
@@ -128,8 +225,8 @@ const List = ({
             />
           </div>
           <div>
-            <Typography variant="body2" className={classes.radiusLabel}>
-              評分：<strong>{formatRating(ratingDraft)}</strong>
+            <Typography variant="body2" className={classes.sliderLabel}>
+              評分 <strong>{formatRating(ratingDraft)}</strong>
             </Typography>
             <Slider
               value={ratingDraft}
@@ -146,93 +243,7 @@ const List = ({
             />
           </div>
         </div>
-        <Typography variant="caption" className={classes.radiusHint} component="div">
-          以紅色「搜尋中心」圖釘為圓心；評分篩選不會重新查詢
-        </Typography>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          size="small"
-          startIcon={locating ? <CircularProgress size={16} color="inherit" /> : <MyLocationIcon />}
-          onClick={onLocate}
-          disabled={locating}
-          className={classes.locateButton}
-        >
-          {locating ? '定位中…' : '以我的位置搜尋'}
-        </Button>
-        {locateError && (
-          <Typography variant="caption" color="error" component="div" className={classes.locateError}>
-            {locateError}
-          </Typography>
-        )}
       </div>
-
-      {type === 'restaurants' && (
-        <div className={classes.keywordBox}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            size="small"
-            label="想吃什麼？"
-            placeholder="例如：火鍋、涼麵、咖哩飯"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') applyKeyword(draft);
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {draft && (
-                    <IconButton size="small" aria-label="清除" onClick={() => applyKeyword('')}>
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                  <IconButton size="small" aria-label="搜尋" onClick={() => applyKeyword(draft)}>
-                    <SearchIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          {/* Recent keyword searches (saved in the browser): one click restores place, radius and keyword */}
-          {recentSearches.length > 0 && (
-            <div className={classes.recent}>
-              <Typography variant="caption" color="textSecondary" className={classes.recentTitle}>
-                <HistoryIcon fontSize="inherit" /> 最近搜尋
-              </Typography>
-              <div className={classes.chips}>
-                {recentSearches.map((search) => (
-                  <Chip
-                    key={search.id}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    clickable
-                    label={`${search.keyword} · ${formatRadius(search.radiusKm)} · ${search.label}`}
-                    onClick={() => onApplySearch(search)}
-                    onDelete={() => onRemoveSearch(search.id)}
-                    className={classes.recentChip}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div className={classes.chips}>
-            {FOOD_KEYWORDS.map((word) => (
-              <Chip
-                key={word}
-                label={word}
-                size="small"
-                clickable
-                color={keyword === word ? 'primary' : 'default'}
-                onClick={() => applyKeyword(keyword === word ? '' : word)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
       <Tabs
         value={tab}
@@ -242,48 +253,36 @@ const List = ({
         variant="fullWidth"
         className={classes.tabs}
       >
-        <Tab value="results" label="搜尋結果" />
-        <Tab value="favorites" label={`我的收藏（${favorites.length}）`} icon={<FavoriteIcon fontSize="small" />} className={classes.favTab} />
+        <Tab value="results" label="搜尋結果" className={classes.tab} />
+        <Tab value="favorites" label={`收藏（${favorites.length}）`} icon={<FavoriteIcon fontSize="small" />} className={`${classes.tab} ${classes.favTab}`} />
       </Tabs>
 
       {tab === 'favorites' && (
         <>
-          {favorites.length === 0 ? (
+          {favorites.length === 0 && (
             <Typography color="textSecondary" className={classes.message}>
-              還沒有收藏。在店家卡片上按 ♥ 就會存在這裡，下次可以直接選。
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="textSecondary" className={classes.message}>
-              共 {favorites.length} 個收藏，距離以目前的搜尋中心計算
+              還沒有收藏。在店家右上角按 ♥ 就會存在這裡，下次可以直接選。
             </Typography>
           )}
-          <Grid container spacing={3} className={classes.list}>
-            {favorites.map((place) => (
-              <Grid key={place.id} item xs={12}>
-                <PlaceDetails
-                  place={place}
-                  loadDetails={loadDetails}
-                  isFavorite
-                  onToggleFavorite={onToggleFavorite}
-                  onShowOnMap={onShowOnMap}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {favorites.map((place) => (
+            <PlaceRow
+              key={place.id}
+              place={place}
+              onSelect={onSelectFavorite}
+              isFavorite
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
         </>
       )}
 
       {tab === 'results' && (isLoading ? (
         <div className={classes.loading}>
-          <CircularProgress size="4rem" />
+          <CircularProgress />
         </div>
       ) : (
         <>
-          {error && (
-            <Typography color="error" className={classes.message}>
-              {error}
-            </Typography>
-          )}
+          {error && <Typography color="error" className={classes.message}>{error}</Typography>}
           {!error && places.length === 0 && (
             <Typography color="textSecondary" className={classes.message}>
               {keyword
@@ -295,17 +294,10 @@ const List = ({
           {!error && places.length === 0 && keyword && nearest && (
             <div className={classes.nearestBox}>
               <Typography variant="body2">
-                最近的「{keyword}」是 <strong>{nearest.name}</strong>，
-                距離約 <strong>{nearest.distanceKm.toFixed(1)} 公里</strong>。
+                最近的「{keyword}」是 <strong>{nearest.name}</strong>，距離約 <strong>{nearest.distanceKm.toFixed(1)} 公里</strong>。
               </Typography>
               {expandTo(nearest, radiusKm) && (
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                  className={classes.expandButton}
-                  onClick={() => setRadiusKm(expandTo(nearest, radiusKm))}
-                >
+                <Button variant="outlined" color="primary" size="small" className={classes.expandButton} onClick={() => setRadiusKm(expandTo(nearest, radiusKm))}>
                   擴大範圍到 {formatRadius(expandTo(nearest, radiusKm))}
                 </Button>
               )}
@@ -314,7 +306,7 @@ const List = ({
           {!error && places.length > 0 && (
             <div className={classes.resultBar}>
               <Typography variant="body2" color="textSecondary">
-                {formatRadius(radiusKm)}內找到 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
+                {formatRadius(radiusKm)}內 {places.length} 個{keyword ? `「${keyword}」` : ''}結果
               </Typography>
               <FormControl size="small">
                 <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} disableUnderline className={classes.sort}>
@@ -327,35 +319,31 @@ const List = ({
             </div>
           )}
 
-          <Grid container spacing={3} className={classes.list}>
-            {places.map((place, i) => (
-              <Grid ref={elRefs[i]} key={place.id} item xs={12}>
-                <PlaceDetails
-                  selected={childClicked === i}
-                  refProp={elRefs[i]}
-                  place={place}
-                  loadDetails={loadDetails}
-                  isFavorite={favoriteIds?.has(place.id)}
-                  onToggleFavorite={onToggleFavorite}
-                />
-              </Grid>
-            ))}
-            {/* Next page only on request: each page is a billed Places API call */}
-            {!error && hasMore && (
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="primary"
-                  onClick={onLoadMore}
-                  disabled={isLoadingMore}
-                  startIcon={isLoadingMore ? <CircularProgress size={16} /> : null}
-                >
-                  {isLoadingMore ? '載入中…' : '載入更多結果'}
-                </Button>
-              </Grid>
-            )}
-          </Grid>
+          {places.map((place) => (
+            <PlaceRow
+              key={place.id}
+              place={place}
+              onSelect={onSelectPlace}
+              isFavorite={favoriteIds?.has(place.id)}
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
+
+          {/* Next page only on request: each page is a billed Places API call */}
+          {!error && hasMore && (
+            <div className={classes.loadMore}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="primary"
+                onClick={onLoadMore}
+                disabled={isLoadingMore}
+                startIcon={isLoadingMore ? <CircularProgress size={16} /> : null}
+              >
+                {isLoadingMore ? '載入中…' : '載入更多結果'}
+              </Button>
+            </div>
+          )}
         </>
       ))}
     </div>

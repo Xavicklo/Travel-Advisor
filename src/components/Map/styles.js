@@ -6,9 +6,16 @@ export default makeStyles((theme) => ({
   },
   mapContainer: {
     position: 'relative',
-    height: '85vh',
+    height: '100%',
     width: '100%',
-    [theme.breakpoints.down('sm')]: { height: '60vh' },
+  },
+  locateFab: {
+    position: 'absolute',
+    right: 10,
+    zIndex: 6,
+    background: '#fff',
+    transition: 'bottom 0.25s ease',
+    '&:hover': { background: '#f5f5f5' },
   },
   markerContainer: {
     position: 'absolute', transform: 'translate(-50%, -50%)', zIndex: 1, '&:hover': { zIndex: 3 },
@@ -208,8 +215,6 @@ export default makeStyles((theme) => ({
 
   searchHere: {
     position: 'absolute',
-    top: 12,
-    left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 6,
     borderRadius: 20,
@@ -225,8 +230,8 @@ export default makeStyles((theme) => ({
   },
   weather: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: 16,
+    right: 16,
     display: 'flex',
     alignItems: 'center',
     gap: 8,
@@ -238,8 +243,8 @@ export default makeStyles((theme) => ({
   },
   labelToggle: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 80,
+    right: 16,
     padding: 6,
     borderRadius: 10,
   },

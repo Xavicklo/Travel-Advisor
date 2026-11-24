@@ -1,93 +1,33 @@
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from '@material-ui/core/styles';
 
 export default makeStyles((theme) => ({
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120,
-    marginBottom: "30px",
-  },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
-  loading: {
-    height: "300px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    // background: "#33373E",
-    padding: "25px",
-  },
-  marginBottom: {
-    marginBottom: "30px",
-  },
-  list: {
-    height: "75vh",
-    overflow: "auto",
-    [theme.breakpoints.down("sm")]: { height: "auto", maxHeight: "60vh" },
-  },
-  radiusBox: {
-    margin: theme.spacing(1, 1, 1),
-    padding: theme.spacing(1.5, 2, 0.5),
-    borderRadius: 12,
-    background: 'rgba(28, 181, 224, 0.08)',
-  },
-  locateButton: {
-    margin: theme.spacing(0.5, 0, 1.5),
-    borderRadius: 20,
-    background: 'linear-gradient(to right, #1cb5e0, #000046)',
-  },
-  locateError: {
-    marginBottom: theme.spacing(1),
-  },
-  sliders: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: theme.spacing(3),
-    // Stack them when the panel is too narrow for two sliders
-    [theme.breakpoints.between('md', 'md')]: { gridTemplateColumns: '1fr' },
-    '@media (max-width: 420px)': { gridTemplateColumns: '1fr' },
-  },
-  slider: {
-    '& .MuiSlider-markLabel': { fontSize: 11 },
-  },
-  ratingSlider: {
-    color: '#f5a623', // star colour
-  },
-  radiusLabel: {
-    marginBottom: 4,
-  },
-  radiusHint: {
-    color: theme.palette.text.secondary,
-    fontSize: 12,
-  },
-  nearestBox: {
-    margin: theme.spacing(0, 1, 2),
-    padding: theme.spacing(1.5, 2),
-    borderRadius: 12,
-    background: '#fff8e1',
-    border: '1px solid #ffe082',
-  },
-  expandButton: {
-    marginTop: theme.spacing(1),
-    borderRadius: 16,
-  },
-  resultBar: {
+  filters: {
+    padding: theme.spacing(2, 2, 1),
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: theme.spacing(1, 1, 1.5),
+    flexDirection: 'column',
+    gap: theme.spacing(1.5),
   },
-  sort: {
-    fontSize: 14,
+  typeRow: {
+    display: 'flex',
+    gap: 8,
+  },
+  typeChip: {
+    flex: 1,
     fontWeight: 600,
   },
-  more: {
-    margin: theme.spacing(0, 1, 1.5),
+  keywordInput: {
+    borderRadius: 20,
+    background: '#f5f7f9',
+  },
+  chips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   recent: {
-    marginTop: theme.spacing(1),
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
   },
   recentTitle: {
     display: 'flex',
@@ -97,25 +37,78 @@ export default makeStyles((theme) => ({
   recentChip: {
     maxWidth: '100%',
   },
+
+  // Distance + rating sliders, side by side
+  sliders: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: theme.spacing(2.5),
+    padding: theme.spacing(1, 1.5, 0),
+    borderRadius: 12,
+    background: 'rgba(28, 181, 224, 0.08)',
+  },
+  sliderLabel: {
+    fontSize: 13,
+  },
+  slider: {
+    '& .MuiSlider-markLabel': { fontSize: 11 },
+  },
+  ratingSlider: {
+    color: '#f5a623', // star colour
+  },
+
   tabs: {
-    margin: theme.spacing(0, 1, 1),
     borderBottom: '1px solid #e0e0e0',
+    minHeight: 44,
+  },
+  tab: {
+    minHeight: 44,
   },
   favTab: {
-    minHeight: 48,
     '& .MuiTab-wrapper': { flexDirection: 'row', gap: 6 },
-    '& .MuiTab-labelIcon': { minHeight: 48 },
   },
-  keywordBox: {
-    margin: theme.spacing(0, 1, 2),
-  },
-  chips: {
+
+  resultBar: {
     display: 'flex',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: theme.spacing(1),
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing(1, 2),
+    borderBottom: '1px solid #eceff1',
+  },
+  sort: {
+    fontSize: 14,
+    fontWeight: 600,
+  },
+  loading: {
+    padding: theme.spacing(6, 0),
+    display: 'flex',
+    justifyContent: 'center',
   },
   message: {
-    margin: theme.spacing(1, 1, 2),
+    padding: theme.spacing(2),
+  },
+  nearestBox: {
+    margin: theme.spacing(0, 2, 2),
+    padding: theme.spacing(1.5, 2),
+    borderRadius: 12,
+    background: '#fff8e1',
+    border: '1px solid #ffe082',
+  },
+  expandButton: {
+    marginTop: theme.spacing(1),
+    borderRadius: 16,
+  },
+  loadMore: {
+    padding: theme.spacing(2),
+  },
+
+  // Details view
+  detailBar: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 2,
+    background: '#fff',
+    padding: theme.spacing(0.5, 1),
+    borderBottom: '1px solid #eceff1',
   },
 }));

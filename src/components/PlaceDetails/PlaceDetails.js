@@ -32,8 +32,12 @@ const CategoryChip = ({ kind }) => {
   );
 };
 
-const PlaceDetails = ({ place, selected, refProp, loadDetails, isFavorite = false, onToggleFavorite, onShowOnMap }) => {
+// variant="panel": shown in the side panel after a place is picked, so details load straight away
+const PlaceDetails = ({
+  place, selected, refProp, loadDetails, isFavorite = false, onToggleFavorite, onShowOnMap, variant = 'card',
+}) => {
   const classes = useStyles();
+  const inPanel = variant === 'panel';
   const [open, setOpen] = useState(false);
   const [details, setDetails] = useState(null);
   const [detailsError, setDetailsError] = useState('');
@@ -44,22 +48,32 @@ const PlaceDetails = ({ place, selected, refProp, loadDetails, isFavorite = fals
     if (selected) refProp?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [selected, refProp]);
 
-  // Reviews are fetched only the first time the user opens them (Place Details is billed).
+  // Reviews are fetched only when wanted (Place Details is billed): on "查看評論",
+  // or right away when the user opened this place in the panel.
+  const fetchDetails = () => {
+    setLoading(true);
+    setDetailsError('');
+    loadDetails(place.id)
+      .then(setDetails)
+      .catch((err) => setDetailsError(err.message))
+      .finally(() => setLoading(false));
+  };
+
   const toggleReviews = () => {
     const next = !open;
     setOpen(next);
-    if (next && !details && !loading) {
-      setLoading(true);
-      setDetailsError('');
-      loadDetails(place.id)
-        .then(setDetails)
-        .catch((err) => setDetailsError(err.message))
-        .finally(() => setLoading(false));
-    }
+    if (next && !details && !loading) fetchDetails();
   };
 
+  useEffect(() => {
+    if (inPanel) {
+      setOpen(true);
+      fetchDetails();
+    }
+  }, [inPanel, place.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <Card elevation={6} className={`${classes.card} ${selected ? classes.selected : ''}`}>
+    <Card elevation={inPanel ? 0 : 6} square={inPanel} className={`${classes.card} ${selected ? classes.selected : ''}`}>
       {/* A real <img loading="lazy">: Places photos are billed per load, so only load ones scrolled into view */}
       <CardMedia
         component="img"

@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { Paper, Typography, useMediaQuery, Button } from '@material-ui/core';
+import {
+  Paper, Typography, useMediaQuery, Button, Fab, CircularProgress, Tooltip,
+} from '@material-ui/core';
+import MyLocationIcon from '@material-ui/icons/MyLocation';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Rating from '@material-ui/lab/Rating';
@@ -45,7 +48,7 @@ const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
 
 const Map = ({
   coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
-  searchCenter, showSearchHere, onSearchHere,
+  searchCenter, showSearchHere, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
@@ -101,7 +104,8 @@ const Map = ({
         defaultZoom={14}
         zoom={zoom}
         margin={[50, 50, 50, 50]}
-        options={{ disableDefaultUI: true, zoomControl: true, styles: mapStyles, maxZoom: MAX_ZOOM }}
+        // Phones: no zoom buttons (pinch to zoom), they'd sit under the bottom sheet
+        options={{ disableDefaultUI: true, zoomControl: isDesktop, styles: mapStyles, maxZoom: MAX_ZOOM, gestureHandling: 'greedy' }}
         onChange={(e) => {
           // Just track where the map is; searching happens only on purpose (see App.js)
           setCoords({ lat: e.center.lat, lng: e.center.lng });
@@ -182,13 +186,34 @@ const Map = ({
 
       {/* Like Google Maps: moving the map doesn't search until the user asks */}
       {showSearchHere && (
-        <Button variant="contained" color="primary" startIcon={<SearchIcon />} className={classes.searchHere} onClick={onSearchHere}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SearchIcon />}
+          className={classes.searchHere}
+          style={{ left: `calc(50% + ${leftInset / 2}px)`, top: isDesktop ? 16 : 140 }} // centre of the visible map
+          onClick={onSearchHere}
+        >
           搜尋這個區域
         </Button>
       )}
 
+      {/* My location, bottom right like Google Maps (above the zoom buttons on desktop) */}
+      <Tooltip title={locateError || '以我的位置搜尋'} placement="left">
+        <Fab
+          size="medium"
+          className={classes.locateFab}
+          style={{ bottom: isDesktop ? 120 : `calc(${bottomInset} + 16px)` }}
+          onClick={onLocate}
+          disabled={locating}
+          aria-label="以我的位置搜尋"
+        >
+          {locating ? <CircularProgress size={22} /> : <MyLocationIcon color={locateError ? 'error' : 'primary'} />}
+        </Fab>
+      </Tooltip>
+
       {weatherInfo && (
-        <Paper elevation={3} className={classes.weather} aria-label="地圖中心的天氣">
+        <Paper elevation={3} className={classes.weather} style={isDesktop ? undefined : { top: 132 }} aria-label="搜尋中心的天氣">
           <span className={classes.weatherIcon}>{weatherInfo.icon}</span>
           <span>
             <strong>{Math.round(weather.temperature_2m)}°C</strong>
@@ -198,7 +223,7 @@ const Map = ({
         </Paper>
       )}
 
-      <Paper elevation={3} className={classes.labelToggle}>
+      <Paper elevation={3} className={classes.labelToggle} style={isDesktop ? undefined : { top: 196 }}>
         <ToggleButtonGroup
           size="small"
           exclusive

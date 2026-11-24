@@ -19,15 +19,18 @@ export default makeStyles((theme) => ({
     '.pac-item-query': { fontSize: 15 },
   },
 
-  toolbar: {
-    background: 'linear-gradient(to left, #000046, #1cb5e0)',
+  bar: {
+    background: 'linear-gradient(120deg, #1cb5e0 0%, #000046 100%)',
+    color: theme.palette.common.white,
+    padding: theme.spacing(1.5, 2, 2),
     display: 'flex',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    gap: theme.spacing(1.5),
+  },
+  brandRow: {
+    display: 'flex',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: theme.spacing(2),
-    padding: theme.spacing(1.5, 3),
-    [theme.breakpoints.down('xs')]: { padding: theme.spacing(1.5, 2) },
+    justifyContent: 'space-between',
   },
   // ---- Wordmark ----
   brand: {
@@ -40,8 +43,8 @@ export default makeStyles((theme) => ({
     '&:hover $badge': { boxShadow: `0 0 0 6px ${alpha('#ffffff', 0.18)}, 0 6px 16px ${alpha('#000046', 0.4)}` },
   },
   badge: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
@@ -51,13 +54,13 @@ export default makeStyles((theme) => ({
     transition: theme.transitions.create('box-shadow', { duration: theme.transitions.duration.short }),
   },
   compass: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#0b1d4d',
     transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)', // slight overshoot, like a real needle
   },
   wordmark: {
     fontFamily: '"Poppins", "Roboto", sans-serif',
-    fontSize: 28,
+    fontSize: 22,
     lineHeight: 1,
     letterSpacing: '-0.5px',
     textShadow: `0 2px 8px ${alpha('#000046', 0.35)}`,
@@ -92,8 +95,8 @@ export default makeStyles((theme) => ({
   search: {
     position: 'relative',
     width: '100%',
-    height: 52,
-    borderRadius: 26,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: alpha(theme.palette.common.white, 0.15),
     border: `1px solid ${alpha(theme.palette.common.white, 0.35)}`,
     color: theme.palette.common.white,
@@ -142,7 +145,7 @@ export default makeStyles((theme) => ({
   inputInput: {
     padding: theme.spacing(1, 2, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-    fontSize: 17,
+    fontSize: 16,
     width: '100%',
     '&::placeholder': { opacity: 0.8 },
   },

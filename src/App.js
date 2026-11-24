@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { CssBaseline, Grid } from '@material-ui/core';
+import { CssBaseline, Paper, IconButton, useMediaQuery } from '@material-ui/core';
+import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import { getPlacesData, getPlaceDetails, findNearest } from './api/places';
 import { getWeatherData } from './api/weather';
@@ -10,6 +12,7 @@ import Header from './components/Header/Header';
 import List from './components/List/List';
 // Named MapView so it doesn't shadow JavaScript's built-in Map (used for the search cache)
 import MapView from './components/Map/Map';
+import useStyles, { PANEL_WIDTH, PANEL_GAP } from './AppStyles';
 
 // Fallback when the user blocks location access: Taipei 101.
 const DEFAULT_COORDS = { lat: 25.0339, lng: 121.5645 };
@@ -27,6 +30,11 @@ const SORTERS = {
 const withReviews = (list) => list.filter((place) => place.reviews > 0);
 
 const App = () => {
+  const classes = useStyles();
+  const isDesktop = useMediaQuery('(min-width:900px)');
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [selectedPlace, setSelectedPlace] = useState(null); // the place shown in the panel's details view
+
   const [type, setType] = useState('restaurants');
   const [rating, setRating] = useState(0); // minimum stars, 0 = no minimum (rating slider)
   const [keyword, setKeyword] = useState(''); // food keyword, e.g. 火鍋 (restaurants only)
@@ -64,7 +72,7 @@ const App = () => {
   const circleRef = useRef(null); // the search-radius circle drawn on the map
   const cacheRef = useRef(new Map()); // search key -> { places, loadMore, time }
   const [autocomplete, setAutocomplete] = useState(null);
-  const [childClicked, setChildClicked] = useState(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -135,11 +143,15 @@ const App = () => {
     circleRef.current.setRadius(radiusKm * 1000);
   }, [mapsLoaded, searchCenter, radiusKm]);
 
-  // After a new search centre or radius, zoom the map so the whole circle is visible.
+  // After a new search centre or radius, zoom the map so the whole circle is visible,
+  // leaving room for the panel that covers part of the map.
   useEffect(() => {
     if (!mapsLoaded || !circleRef.current) return;
-    mapRef.current.fitBounds(circleRef.current.getBounds(), 20);
-  }, [mapsLoaded, radiusKm, fitNonce]);
+    const padding = isDesktop
+      ? { top: 24, right: 24, bottom: 24, left: (panelOpen ? PANEL_WIDTH + PANEL_GAP : 0) + 24 }
+      : { top: 130, right: 16, bottom: panelOpen ? window.innerHeight * 0.5 + 16 : 72, left: 16 };
+    mapRef.current.fitBounds(circleRef.current.getBounds(), padding);
+  }, [mapsLoaded, radiusKm, fitNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Search: only when the search centre, radius, type or keyword changes ----
   const activeKeyword = type === 'restaurants' ? keyword.trim() : '';
@@ -154,7 +166,7 @@ const App = () => {
     const showResults = (list, more) => {
       setPlaces(withReviews(list));
       setLoadMore(() => more); // store the function itself, not call it
-      setChildClicked(null);
+      setSelectedPlace(null);
       setNearest(null);
       setError('');
     };
@@ -268,8 +280,17 @@ const App = () => {
     [favorites, searchCenter],
   );
 
-  // Just look at a place on the map (doesn't start a new search).
-  const showOnMap = (place) => {
+  // Pick a place (from the list or the map): show its details in the panel.
+  const selectPlace = (place) => {
+    setSelectedPlace(place);
+    setPanelOpen(true);
+  };
+  // The selected place's position in the current results (for the map's marker layout)
+  const selectedIndex = selectedPlace ? visiblePlaces.findIndex((p) => p.id === selectedPlace.id) : -1;
+
+  // A saved favourite may be anywhere: move the map there (doesn't start a new search).
+  const selectFavorite = (place) => {
+    selectPlace(place);
     setCoords({ lat: place.lat, lng: place.lng });
     setZoom(17);
   };
@@ -283,66 +304,112 @@ const App = () => {
     searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '');
   };
 
+  const header = (
+    <Header
+      onPlaceChanged={onPlaceChanged}
+      onLoad={onLoad}
+      mapsLoaded={mapsLoaded}
+      actions={isDesktop && (
+        <IconButton
+          size="small"
+          className={classes.collapseButton}
+          onClick={() => setPanelOpen((open) => !open)}
+          aria-label={panelOpen ? '收起面板' : '展開面板'}
+          title={panelOpen ? '收起面板' : '展開面板'}
+        >
+          {panelOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
+      )}
+    />
+  );
+
+  const list = (
+    <List
+      isLoading={isLoading}
+      isLoadingMore={isLoadingMore}
+      hasMore={!!loadMore}
+      onLoadMore={handleLoadMore}
+      error={error}
+      places={visiblePlaces}
+      type={type}
+      setType={setType}
+      keyword={keyword}
+      setKeyword={setKeyword}
+      rating={rating}
+      setRating={setRating}
+      radiusKm={radiusKm}
+      setRadiusKm={setRadiusKm}
+      sortBy={sortBy}
+      setSortBy={setSortBy}
+      selectedPlace={selectedPlace}
+      onSelectPlace={selectPlace}
+      onBack={() => setSelectedPlace(null)}
+      loadDetails={loadDetails}
+      nearest={nearest}
+      recentSearches={recentSearches}
+      onApplySearch={applySearch}
+      onRemoveSearch={removeSearch}
+      favorites={favoritesWithDistance}
+      favoriteIds={favoriteIds}
+      onToggleFavorite={toggleFavorite}
+      onSelectFavorite={selectFavorite}
+    />
+  );
+
   return (
-    <>
+    <div className={classes.root}>
       <CssBaseline />
-      <Header onPlaceChanged={onPlaceChanged} onLoad={onLoad} mapsLoaded={mapsLoaded} />
-      <Grid container spacing={3} style={{ width: '100%', margin: 0 }}>
-        <Grid item xs={12} md={4}>
-          <List
-            isLoading={isLoading}
-            isLoadingMore={isLoadingMore}
-            hasMore={!!loadMore}
-            onLoadMore={handleLoadMore}
-            error={error}
-            childClicked={childClicked}
-            places={visiblePlaces}
-            type={type}
-            setType={setType}
-            keyword={keyword}
-            setKeyword={setKeyword}
-            rating={rating}
-            setRating={setRating}
-            radiusKm={radiusKm}
-            setRadiusKm={setRadiusKm}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            loadDetails={loadDetails}
-            nearest={nearest}
-            recentSearches={recentSearches}
-            onApplySearch={applySearch}
-            onRemoveSearch={removeSearch}
-            favorites={favoritesWithDistance}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={toggleFavorite}
-            onShowOnMap={showOnMap}
-            onLocate={locateMe}
-            locating={locating}
-            locateError={locateError}
-          />
-        </Grid>
-        <Grid item xs={12} md={8}>
-          <MapView
-            setChildClicked={setChildClicked}
-            setCoords={setCoords}
-            coords={coords}
-            searchCenter={searchCenter}
-            showSearchHere={movedAway && mapsLoaded}
-            onSearchHere={searchHere}
-            zoom={zoom}
-            setZoom={setZoom}
-            childClicked={childClicked}
-            places={visiblePlaces}
-            weather={weather}
-            userLocation={userLocation}
-            onMapsLoaded={(map) => {
-              mapRef.current = map;
-              setMapsLoaded(true);
-            }}
-          />
-        </Grid>
-      </Grid>
-    </>
+
+      {/* The map fills the whole screen; everything else floats on top of it */}
+      <div className={classes.map}>
+        <MapView
+          setChildClicked={(index) => index != null && visiblePlaces[index] && selectPlace(visiblePlaces[index])}
+          setCoords={setCoords}
+          coords={coords}
+          searchCenter={searchCenter}
+          showSearchHere={movedAway && mapsLoaded}
+          onSearchHere={searchHere}
+          onLocate={locateMe}
+          locating={locating}
+          locateError={locateError}
+          zoom={zoom}
+          setZoom={setZoom}
+          childClicked={selectedIndex >= 0 ? selectedIndex : null}
+          places={visiblePlaces}
+          weather={weather}
+          userLocation={userLocation}
+          leftInset={isDesktop && panelOpen ? PANEL_WIDTH + PANEL_GAP : 0}
+          bottomInset={!isDesktop ? (panelOpen ? '50vh' : '56px') : 0}
+          onMapsLoaded={(map) => {
+            mapRef.current = map;
+            setMapsLoaded(true);
+          }}
+        />
+      </div>
+
+      {isDesktop ? (
+        <Paper elevation={6} className={`${classes.panel} ${panelOpen ? '' : classes.panelCollapsed}`}>
+          {header}
+          {panelOpen && <div className={classes.panelBody}>{list}</div>}
+        </Paper>
+      ) : (
+        <>
+          <Paper elevation={6} className={classes.mobileHeader}>{header}</Paper>
+          <Paper elevation={8} className={`${classes.sheet} ${panelOpen ? '' : classes.sheetCollapsed}`}>
+            <div
+              className={classes.handle}
+              role="button"
+              tabIndex={0}
+              onClick={() => setPanelOpen((open) => !open)}
+              onKeyDown={(e) => e.key === 'Enter' && setPanelOpen((open) => !open)}
+            >
+              {panelOpen ? '收起' : `顯示 ${visiblePlaces.length} 個結果`}
+            </div>
+            <div className={classes.panelBody}>{list}</div>
+          </Paper>
+        </>
+      )}
+    </div>
   );
 };
 

@@ -6,6 +6,8 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 
 ## Features
 
+- **Google Maps-style layout:** full-screen map with a floating side panel (search, filters, compact result rows, place details). On phones the panel becomes a bottom sheet. Weather, marker mode and "my location" sit in the corners.
+
 - Interactive Google Map with custom map styling
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
 - Search any city or place with **Google Places Autocomplete**
