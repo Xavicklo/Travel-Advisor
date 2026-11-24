@@ -1,24 +1,37 @@
 import React, { useMemo, useState } from 'react';
 import GoogleMapReact from 'google-map-react';
 import { Paper, Typography, useMediaQuery, Switch, FormControlLabel } from '@material-ui/core';
-import LocationOnOutlinedIcon from '@material-ui/icons/LocationOnOutlined';
 import Rating from '@material-ui/lab/Rating';
 
 import useStyles from './styles';
 import mapStyles from '../../mapStyles';
 import { describeWeather } from '../../api/weather';
 import { layoutLabels } from '../../utils/labelLayout';
+import { getKind } from '../../utils/categories';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg';
 const MAX_ZOOM = 19;
 
-/** The full marker card: name, photo, rating. */
+/** Round category icon, e.g. fork & knife for restaurants, bed for hotels. */
+const KindIcon = ({ kind, classes, size = 22 }) => {
+  const { Icon, color, label } = getKind(kind);
+  return (
+    <span className={classes.kindIcon} style={{ backgroundColor: color, width: size, height: size }} title={label}>
+      <Icon style={{ fontSize: size * 0.65 }} />
+    </span>
+  );
+};
+
+/** The full marker card: category icon, name, photo, rating. */
 const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
-  <Paper elevation={3} className={classes.paper}>
-    <Typography className={classes.typography} variant="subtitle2" gutterBottom>
-      {place.name}
-    </Typography>
+  <Paper elevation={3} className={classes.paper} style={{ borderTop: `3px solid ${getKind(place.kind).color}` }}>
+    <div className={classes.cardTitle}>
+      <KindIcon kind={place.kind} classes={classes} size={20} />
+      <Typography className={classes.typography} variant="subtitle2">
+        {place.name}
+      </Typography>
+    </div>
     <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} />
     <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
     {hiddenCount > 0 && <span className={classes.nearby}>附近還有 {hiddenCount} 個</span>}
@@ -91,15 +104,16 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
             {isDesktop ? (
               <MarkerCard place={place} classes={classes} hiddenCount={hiddenCount} />
             ) : (
-              <LocationOnOutlinedIcon color="primary" fontSize="large" />
+              <KindIcon kind={place.kind} classes={classes} size={30} />
             )}
           </div>
         ))}
 
         {layout.dots.map(({ place, index }) => (
           <div className={classes.dotContainer} lat={place.lat} lng={place.lng} key={`p-${index}`}>
-            <div className={classes.dot} title={place.name}>
-              {place.rating ? place.rating.toFixed(1) : '•'}
+            <div className={classes.dot} title={place.name} style={{ borderColor: getKind(place.kind).color }}>
+              <KindIcon kind={place.kind} classes={classes} size={20} />
+              <span className={classes.dotRating}>{place.rating ? place.rating.toFixed(1) : '–'}</span>
             </div>
             {isDesktop && (
               <div className={classes.preview}>

@@ -1,3 +1,5 @@
+import { belongsTo, classify } from '../utils/categories';
+
 /**
  * Places inside the visible map area, from the Google Places API (Nearby Search)
  * through the Maps JavaScript API's PlacesService.
@@ -20,7 +22,7 @@ const STATUS_MESSAGES = {
 };
 
 /** Google's result -> the shape our components use. */
-export const normalizePlace = (result) => ({
+export const normalizePlace = (result, category = 'restaurants') => ({
   id: result.place_id,
   name: result.name,
   lat: result.geometry.location.lat(),
@@ -31,6 +33,8 @@ export const normalizePlace = (result) => ({
   address: result.vicinity || '',
   photoUrl: result.photos?.[0]?.getUrl({ maxWidth: 600, maxHeight: 400 }) || null,
   // Opens the place in Google Maps (phone, hours, website, reviews...). Free: no API call.
+  types: result.types || [],
+  kind: classify(result.types, category), // restaurant | cafe | bakery | bar | lodging | attraction
   mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(result.name)}&query_place_id=${result.place_id}`,
 });
 
@@ -38,9 +42,10 @@ export const normalizePlace = (result) => ({
  * @param {google.maps.Map} map - needed by PlacesService (it renders attributions there)
  * @param {string} type - restaurants | hotels | attractions
  * @param {{ne: {lat, lng}, sw: {lat, lng}}} bounds
+ * @param {string} [keyword] - e.g. "火鍋" (hot pot): only places matching it
  * @returns {Promise<Array>} normalized places (max 20, Google's page size)
  */
-export const getPlacesData = (map, type, bounds) => {
+export const getPlacesData = (map, type, bounds, keyword = '') => {
   const { maps } = window.google;
   const service = new maps.places.PlacesService(map);
 
@@ -48,6 +53,7 @@ export const getPlacesData = (map, type, bounds) => {
     bounds: new maps.LatLngBounds(bounds.sw, bounds.ne),
     type: PLACE_TYPES[type],
   };
+  if (keyword.trim()) request.keyword = keyword.trim();
 
   return new Promise((resolve, reject) => {
     service.nearbySearch(request, (results, status) => {
@@ -56,7 +62,8 @@ export const getPlacesData = (map, type, bounds) => {
         resolve(
           results
             .filter((r) => r.geometry?.location && r.business_status !== 'CLOSED_PERMANENTLY')
-            .map(normalizePlace),
+            .filter((r) => belongsTo(r.types, type)) // e.g. no hotels under "restaurants"
+            .map((r) => normalizePlace(r, type)),
         );
       } else if (status === ZERO_RESULTS) {
         resolve([]);

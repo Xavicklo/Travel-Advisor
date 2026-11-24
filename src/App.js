@@ -13,6 +13,7 @@ const DEFAULT_COORDS = { lat: 25.0339, lng: 121.5645 };
 const App = () => {
   const [type, setType] = useState('restaurants');
   const [rating, setRating] = useState('');
+  const [keyword, setKeyword] = useState(''); // food keyword, e.g. 火鍋 (restaurants only)
 
   const [coords, setCoords] = useState(DEFAULT_COORDS);
   const [zoom, setZoom] = useState(14);
@@ -54,7 +55,7 @@ const App = () => {
     const timer = setTimeout(() => {
       setIsLoading(true);
       setError('');
-      getPlacesData(mapRef.current, type, bounds)
+      getPlacesData(mapRef.current, type, bounds, type === 'restaurants' ? keyword : '')
         .then((data) => {
           if (cancelled) return;
           setPlaces(data.filter((place) => place.reviews > 0));
@@ -74,7 +75,7 @@ const App = () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [bounds, type, mapsLoaded]);
+  }, [bounds, type, keyword, mapsLoaded]);
 
   // Weather for the centre of the map.
   useEffect(() => {
@@ -104,6 +105,8 @@ const App = () => {
             places={filteredPlaces}
             type={type}
             setType={setType}
+            keyword={keyword}
+            setKeyword={setKeyword}
             rating={rating}
             setRating={setRating}
           />

@@ -10,6 +10,8 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
 - Search any city or place with **Google Places Autocomplete**
 - Filter by type (restaurants, hotels, attractions) and minimum rating
+- **Food keyword search** (火鍋 hot pot, 涼麵 cold noodles, 咖哩飯 curry rice…): sent to Nearby Search as `keyword`, with quick chips
+- **Category filtering and icons:** results are checked against Google's `types`, so a hotel with a restaurant doesn't appear under restaurants. Each place gets its own icon and colour (restaurant, café, bakery, bar, lodging, attraction) on the map and in the list
 - **Smart labels (marker collision handling):** important places get full cards, the rest become rating dots, and dots that overlap merge into clusters (see below)
 - Clicking a marker scrolls the list to that place
 - One-click **directions in Google Maps**

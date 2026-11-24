@@ -10,7 +10,7 @@ export default makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   loading: {
-    height: "600px",
+    height: "300px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -26,6 +26,15 @@ export default makeStyles((theme) => ({
     height: "75vh",
     overflow: "auto",
     [theme.breakpoints.down("sm")]: { height: "auto", maxHeight: "60vh" },
+  },
+  keywordBox: {
+    margin: theme.spacing(0, 1, 2),
+  },
+  chips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: theme.spacing(1),
   },
   message: {
     margin: theme.spacing(1, 1, 2),

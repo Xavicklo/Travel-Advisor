@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
-import { Box, Typography, Button, Card, CardMedia, CardContent, CardActions } from '@material-ui/core';
+import { Box, Typography, Button, Card, CardMedia, CardContent, CardActions, Chip } from '@material-ui/core';
 import LocationOnIcon from '@material-ui/icons/LocationOn';
 import DirectionsIcon from '@material-ui/icons/Directions';
 import MapIcon from '@material-ui/icons/Map';
 import Rating from '@material-ui/lab/Rating';
+
+import { getKind } from '../../utils/categories';
 
 import useStyles from './styles';
 
@@ -13,6 +15,19 @@ const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/
 const directionsUrl = (place) => `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&destination_place_id=${place.id}`;
 
 const openInNewTab = (url) => window.open(url, '_blank', 'noopener,noreferrer');
+
+/** Small coloured label with the category icon, e.g. 🍴 餐廳 */
+const CategoryChip = ({ kind }) => {
+  const { Icon, label, color } = getKind(kind);
+  return (
+    <Chip
+      size="small"
+      icon={<Icon style={{ color: '#fff' }} />}
+      label={label}
+      style={{ backgroundColor: color, color: '#fff' }}
+    />
+  );
+};
 
 const PlaceDetails = ({ place, selected, refProp }) => {
   const classes = useStyles();
@@ -27,6 +42,7 @@ const PlaceDetails = ({ place, selected, refProp }) => {
       <CardMedia style={{ height: 250 }} image={place.photoUrl || PLACEHOLDER_IMAGE} title={place.name} />
       <CardContent>
         <Typography gutterBottom variant="h5">{place.name}</Typography>
+        <CategoryChip kind={place.kind} />
         <Box display="flex" justifyContent="space-between" alignItems="center" my={2}>
           <Box display="flex" alignItems="center">
             <Rating name="read-only" value={place.rating || 0} precision={0.5} readOnly />
