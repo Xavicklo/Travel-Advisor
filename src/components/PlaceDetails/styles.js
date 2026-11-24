@@ -4,9 +4,19 @@ export default makeStyles((theme) => ({
   card: {
     position: 'relative',
   },
-  favButton: {
+  navButton: {
     position: 'absolute',
     top: 10,
+    right: 10,
+    color: '#fff',
+    background: '#1a73e8', // Google Maps directions blue
+    boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+    transition: 'transform 0.15s ease',
+    '&:hover': { background: '#1765cc', transform: 'scale(1.12)' },
+  },
+  favButton: {
+    position: 'absolute',
+    top: 66, // under the directions button
     right: 10,
     background: 'rgba(255,255,255,0.92)',
     boxShadow: '0 1px 4px rgba(0,0,0,0.25)',

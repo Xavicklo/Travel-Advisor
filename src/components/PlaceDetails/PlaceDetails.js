@@ -83,6 +83,18 @@ const PlaceDetails = ({
         alt={place.name}
         style={{ objectFit: 'cover' }}
       />
+      {/* Directions: a real link, so on phones it opens the Google Maps app straight away */}
+      <IconButton
+        component="a"
+        href={directionsUrl(place)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={classes.navButton}
+        aria-label="導航到這裡"
+        title="導航到這裡"
+      >
+        <DirectionsIcon />
+      </IconButton>
       {onToggleFavorite && (
         <IconButton
           className={classes.favButton}
