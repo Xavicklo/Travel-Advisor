@@ -133,6 +133,12 @@ export default makeStyles((theme) => ({
     flexShrink: 0,
     boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
   },
+  chainText: {
+    fontWeight: 800,
+    lineHeight: 1,
+    letterSpacing: -0.5,
+    fontFamily: '"Roboto", "Noto Sans TC", sans-serif',
+  },
   cardTitle: {
     display: 'flex',
     alignItems: 'flex-start',

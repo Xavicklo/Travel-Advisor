@@ -16,18 +16,24 @@ import MAP_THEMES, { getTheme } from '../../mapThemes';
 import useLocalStorage from '../../utils/useLocalStorage';
 import { describeWeather } from '../../api/weather';
 import { layoutLabels, labelLevels, shortName } from '../../utils/labelLayout';
-import { getKind } from '../../utils/categories';
+import { getKind, storeChain } from '../../utils/categories';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const MAX_ZOOM = 19;
 const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg';
 
 /** Round category icon, e.g. fork & knife for restaurants, bed for hotels. */
-const KindIcon = ({ kind, classes, size = 22 }) => {
+const KindIcon = ({ kind, classes, size = 22, name = '' }) => {
   const { Icon, color, label } = getKind(kind);
+  // Convenience stores: the chain's short name (7 / 全 / 萊 / OK) instead of the generic icon
+  const chain = kind === 'store' ? storeChain(name) : null;
   return (
     <span className={classes.kindIcon} style={{ backgroundColor: color, width: size, height: size }} title={label}>
-      <Icon style={{ fontSize: size * 0.65 }} />
+      {chain ? (
+        <span className={classes.chainText} style={{ fontSize: size * (chain.length > 1 ? 0.42 : 0.55) }}>{chain}</span>
+      ) : (
+        <Icon style={{ fontSize: size * 0.65 }} />
+      )}
     </span>
   );
 };
@@ -40,7 +46,7 @@ const KindIcon = ({ kind, classes, size = 22 }) => {
 const PhotoCard = ({ place, classes }) => (
   <Paper elevation={3} className={classes.paper} style={{ borderTop: `3px solid ${getKind(place.kind).color}` }}>
     <div className={classes.cardTitle}>
-      <KindIcon kind={place.kind} classes={classes} size={20} />
+      <KindIcon kind={place.kind} name={place.name} classes={classes} size={20} />
       <Typography className={classes.typography} variant="subtitle2">{place.name}</Typography>
     </div>
     {/* loading="lazy": Places photos are billed per load */}
@@ -53,7 +59,7 @@ const PhotoCard = ({ place, classes }) => (
 const MarkerCard = ({ place, classes }) => (
   <Paper elevation={3} className={classes.paper} style={{ borderTop: `3px solid ${getKind(place.kind).color}` }}>
     <div className={classes.cardTitle}>
-      <KindIcon kind={place.kind} classes={classes} size={20} />
+      <KindIcon kind={place.kind} name={place.name} classes={classes} size={20} />
       <Typography className={classes.typography} variant="subtitle2">
         {place.name}
       </Typography>
@@ -70,13 +76,13 @@ const PlaceLabel = ({ place, level, classes, selected = false }) => {
   if (level === 0 && !selected) {
     return (
       <div className={classes.dot}>
-        <KindIcon kind={place.kind} classes={classes} size={24} />
+        <KindIcon kind={place.kind} name={place.name} classes={classes} size={24} />
       </div>
     );
   }
   return (
     <div className={`${classes.label} ${selected ? classes.labelSelected : ''}`}>
-      <KindIcon kind={place.kind} classes={classes} size={24} />
+      <KindIcon kind={place.kind} name={place.name} classes={classes} size={24} />
       {(level >= 1 || selected) && place.rating != null && (
         <span className={classes.labelRating}>★{place.rating.toFixed(1)}</span>
       )}
@@ -269,7 +275,7 @@ const Map = ({
                 <span className={classes.stack}>
                   {members.slice(0, 3).map((p) => (
                     <span key={p.id} className={classes.stackItem}>
-                      <KindIcon kind={p.kind} classes={classes} size={22} />
+                      <KindIcon kind={p.kind} name={p.name} classes={classes} size={22} />
                     </span>
                   ))}
                 </span>
@@ -279,7 +285,7 @@ const Map = ({
                 <div className={classes.clusterTipTitle}>這裡有 {cluster.count} 個地點重疊</div>
                 {members.slice(0, 5).map((p) => (
                   <div key={p.id} className={classes.clusterTipRow}>
-                    <KindIcon kind={p.kind} classes={classes} size={16} />
+                    <KindIcon kind={p.kind} name={p.name} classes={classes} size={16} />
                     <span className={classes.clusterTipName}>{p.name}</span>
                     {p.rating && <span className={classes.clusterTipRating}>★ {p.rating.toFixed(1)}</span>}
                   </div>

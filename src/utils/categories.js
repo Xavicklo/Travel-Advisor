@@ -98,3 +98,19 @@ export const looksLikePlace = (text) => {
   if (Object.values(QUICK_KEYWORDS).some((words) => words.includes(t))) return false;
   return PLACE_WORDS.test(t);
 };
+
+/**
+ * Which convenience-store chain a place is, from its name, as a short text tag for the
+ * marker (plain text in our own style, not the chains' logos).
+ * @returns {string|null} '7' | '全' | '萊' | 'OK' | null
+ */
+const CHAINS = [
+  [/7-?eleven|7-?11|統一超商|小七/i, '7'],
+  [/全家|family ?mart/i, '全'],
+  [/萊爾富|hi-?life/i, '萊'],
+  [/ok ?(超商|mart)|^ok\b/i, 'OK'],
+];
+export const storeChain = (name = '') => {
+  const hit = CHAINS.find(([re]) => re.test(name));
+  return hit ? hit[1] : null;
+};
