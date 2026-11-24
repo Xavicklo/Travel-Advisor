@@ -17,6 +17,55 @@ export default makeStyles((theme) => ({
     transition: 'bottom 0.25s ease',
     '&:hover': { background: '#f5f5f5' },
   },
+  // 圖層 picker
+  layersPaper: {
+    padding: theme.spacing(1.5),
+    borderRadius: 14,
+  },
+  layersTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    marginBottom: theme.spacing(1),
+  },
+  layersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 64px)',
+    gap: theme.spacing(1),
+  },
+  layerOption: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 10,
+    padding: 3,
+    border: '2px solid transparent',
+  },
+  layerActive: {
+    borderColor: theme.palette.primary.main,
+    '& $layerLabel': { color: theme.palette.primary.main, fontWeight: 700 },
+  },
+  layerSwatch: {
+    position: 'relative',
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
+  },
+  layerBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    padding: '1px 5px',
+    borderRadius: 8,
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#fff',
+    background: '#e8710a',
+  },
+  layerLabel: {
+    fontSize: 12,
+  },
   markerContainer: {
     position: 'absolute', transform: 'translate(-50%, -50%)', zIndex: 1, '&:hover': { zIndex: 3 },
   },

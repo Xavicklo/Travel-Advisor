@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import GoogleMapReact from 'google-map-react';
 import {
-  Paper, Typography, useMediaQuery, Button, Fab, CircularProgress, Tooltip,
+  Paper, Typography, useMediaQuery, Button, Fab, CircularProgress, Tooltip, Popover, ButtonBase,
 } from '@material-ui/core';
 import MyLocationIcon from '@material-ui/icons/MyLocation';
 import ToggleButton from '@material-ui/lab/ToggleButton';
@@ -9,9 +9,11 @@ import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Rating from '@material-ui/lab/Rating';
 import RoomIcon from '@material-ui/icons/Room';
 import SearchIcon from '@material-ui/icons/Search';
+import LayersIcon from '@material-ui/icons/Layers';
 
 import useStyles from './styles';
-import mapStyles from '../../mapStyles';
+import MAP_THEMES, { getTheme } from '../../mapThemes';
+import useLocalStorage from '../../utils/useLocalStorage';
 import { describeWeather } from '../../api/weather';
 import { layoutLabels, labelLevels, shortName } from '../../utils/labelLayout';
 import { getKind } from '../../utils/categories';
@@ -92,6 +94,17 @@ const Map = ({
   // auto: icons, then ratings, then names as you zoom in (default) · icons: icons only · names: always names
   // all: the original "every place is a photo card" view, no collision handling (for comparison)
   const [labelMode, setLabelMode] = useState('auto');
+  // Base map (淺色 / 標準 / 衛星 / 地形 / 夜間), remembered between visits
+  const [themeId, setThemeId] = useLocalStorage('ta-map-theme', 'light');
+  const theme = getTheme(themeId);
+  const [layersAnchor, setLayersAnchor] = useState(null);
+  const mapRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    mapRef.current.setOptions({ styles: theme.styles });
+    mapRef.current.setMapTypeId(theme.mapTypeId);
+  }, [mapReady, theme]);
 
   const layout = useMemo(() => {
     if (labelMode === 'all') {
@@ -139,14 +152,18 @@ const Map = ({
         // One loader for the whole app: the Maps JavaScript API plus the Places library.
         bootstrapURLKeys={{ key: GOOGLE_MAPS_API_KEY, libraries: ['places'], language: 'zh-TW', region: 'TW' }}
         yesIWantToUseGoogleMapApiInternals
-        onGoogleApiLoaded={({ map }) => onMapsLoaded(map)}
+        onGoogleApiLoaded={({ map }) => {
+          mapRef.current = map;
+          setMapReady(true);
+          onMapsLoaded(map);
+        }}
         defaultCenter={coords}
         center={coords}
         defaultZoom={14}
         zoom={zoom}
         margin={[50, 50, 50, 50]}
         // Phones: no zoom buttons (pinch to zoom), they'd sit under the bottom sheet
-        options={{ disableDefaultUI: true, zoomControl: isDesktop, styles: mapStyles, maxZoom: MAX_ZOOM, gestureHandling: 'greedy' }}
+        options={{ disableDefaultUI: true, zoomControl: isDesktop, styles: theme.styles, mapTypeId: theme.mapTypeId, maxZoom: MAX_ZOOM, gestureHandling: 'greedy' }}
         onChange={(e) => {
           // Just track where the map is; searching happens only on purpose (see App.js)
           setCoords({ lat: e.center.lat, lng: e.center.lng });
@@ -248,6 +265,43 @@ const Map = ({
           搜尋這個區域
         </Button>
       )}
+
+      {/* Base map picker, like Google Maps' 圖層 button */}
+      <Tooltip title="地圖樣式" placement="left">
+        <Fab
+          size="medium"
+          className={classes.locateFab}
+          style={{ bottom: isDesktop ? 176 : `calc(${bottomInset} + 72px)` }}
+          onClick={(e) => setLayersAnchor(e.currentTarget)}
+          aria-label="地圖樣式"
+        >
+          <LayersIcon color="primary" />
+        </Fab>
+      </Tooltip>
+      <Popover
+        open={Boolean(layersAnchor)}
+        anchorEl={layersAnchor}
+        onClose={() => setLayersAnchor(null)}
+        anchorOrigin={{ vertical: 'center', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'center', horizontal: 'right' }}
+        classes={{ paper: classes.layersPaper }}
+      >
+        <div className={classes.layersTitle}>地圖樣式</div>
+        <div className={classes.layersGrid}>
+          {MAP_THEMES.map((t) => (
+            <ButtonBase
+              key={t.id}
+              className={`${classes.layerOption} ${t.id === theme.id ? classes.layerActive : ''}`}
+              onClick={() => { setThemeId(t.id); setLayersAnchor(null); }}
+            >
+              <span className={classes.layerSwatch} style={{ background: t.swatch }}>
+                {t.recommended && <span className={classes.layerBadge}>推薦</span>}
+              </span>
+              <span className={classes.layerLabel}>{t.label}</span>
+            </ButtonBase>
+          ))}
+        </div>
+      </Popover>
 
       {/* My location, bottom right like Google Maps (above the zoom buttons on desktop) */}
       <Tooltip title={locateError || '以我的位置搜尋'} placement="left">
