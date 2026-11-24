@@ -95,7 +95,8 @@ const Map = ({
   // all: the original "every place is a photo card" view, no collision handling (for comparison)
   const [labelMode, setLabelMode] = useState('auto');
   // Base map (淺色 / 標準 / 衛星 / 地形 / 夜間), remembered between visits
-  const [themeId, setThemeId] = useLocalStorage('ta-map-theme', 'light');
+  // Satellite by default (v2 key: earlier visitors also start on satellite once)
+  const [themeId, setThemeId] = useLocalStorage('ta-map-theme-v2', 'hybrid');
   const theme = getTheme(themeId);
   const [layersAnchor, setLayersAnchor] = useState(null);
   const mapRef = useRef(null);
