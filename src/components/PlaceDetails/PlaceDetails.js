@@ -33,12 +33,12 @@ const PlaceDetails = ({ place, selected, refProp }) => {
             <Typography variant="body2" style={{ marginLeft: 6 }}>{place.rating ?? '–'}</Typography>
           </Box>
           <Typography component="legend">
-            {place.reviews.toLocaleString()} review{place.reviews === 1 ? '' : 's'}
+            {place.reviews.toLocaleString()} 則評論
           </Typography>
         </Box>
         {place.priceLevel && (
           <Box display="flex" justifyContent="space-between">
-            <Typography component="legend">Price</Typography>
+            <Typography component="legend">價位</Typography>
             <Typography gutterBottom variant="subtitle1">{place.priceLevel}</Typography>
           </Box>
         )}
@@ -51,10 +51,10 @@ const PlaceDetails = ({ place, selected, refProp }) => {
       </CardContent>
       <CardActions>
         <Button size="small" color="primary" startIcon={<DirectionsIcon />} onClick={() => openInNewTab(directionsUrl(place))}>
-          Directions
+          導航
         </Button>
         <Button size="small" color="primary" startIcon={<MapIcon />} onClick={() => openInNewTab(place.mapsUrl)}>
-          Google Maps
+          在 Google 地圖開啟
         </Button>
       </CardActions>
     </Card>

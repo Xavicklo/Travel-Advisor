@@ -17,9 +17,9 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded }) => {
         <SearchIcon />
       </div>
       <InputBase
-        placeholder={mapsLoaded ? 'Search…' : 'Loading map…'}
+        placeholder={mapsLoaded ? '搜尋城市、景點或地址…' : '地圖載入中…'}
         disabled={!mapsLoaded}
-        inputProps={{ 'aria-label': 'Search a place' }}
+        inputProps={{ 'aria-label': '搜尋地點' }}
         classes={{ root: classes.inputRoot, input: classes.inputInput }}
       />
     </div>
@@ -28,16 +28,18 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded }) => {
   return (
     <AppBar position="static">
       <Toolbar className={classes.toolbar}>
-        <Typography variant="h5" className={classes.title}>
-          Travel Advisor
-        </Typography>
-        <Box display="flex" alignItems="center">
-          <Typography variant="h6" className={classes.title}>
-            Explore new places
+        <Box>
+          <Typography variant="h5" className={classes.brand}>
+            Travel Advisor
           </Typography>
+          <Typography variant="body2" className={classes.subtitle}>
+            探索附近的餐廳、住宿與景點
+          </Typography>
+        </Box>
+        <Box className={classes.searchWrap}>
           {/* Autocomplete needs google.maps.places, so render it only after the map script has loaded */}
           {mapsLoaded ? (
-            <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged} options={AUTOCOMPLETE_OPTIONS}>
+            <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged} options={AUTOCOMPLETE_OPTIONS} className={classes.autocomplete}>
               {searchBox}
             </Autocomplete>
           ) : (

@@ -21,7 +21,7 @@ const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
     </Typography>
     <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} />
     <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
-    {hiddenCount > 0 && <span className={classes.nearby}>+{hiddenCount} nearby</span>}
+    {hiddenCount > 0 && <span className={classes.nearby}>附近還有 {hiddenCount} 個</span>}
   </Paper>
 );
 
@@ -42,7 +42,7 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
     return (
       <div className={classes.mapContainer}>
         <Typography className={classes.missingKey}>
-          Missing REACT_APP_GOOGLE_MAPS_API_KEY. Copy .env.example to .env and add your key.
+          缺少 REACT_APP_GOOGLE_MAPS_API_KEY：請把 .env.example 複製成 .env，並填入 Google Maps 金鑰。
         </Typography>
       </div>
     );
@@ -69,7 +69,7 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
     <div className={classes.mapContainer}>
       <GoogleMapReact
         // One loader for the whole app: the Maps JavaScript API plus the Places library.
-        bootstrapURLKeys={{ key: GOOGLE_MAPS_API_KEY, libraries: ['places'] }}
+        bootstrapURLKeys={{ key: GOOGLE_MAPS_API_KEY, libraries: ['places'], language: 'zh-TW', region: 'TW' }}
         yesIWantToUseGoogleMapApiInternals
         onGoogleApiLoaded={({ map }) => onMapsLoaded(map)}
         defaultCenter={coords}
@@ -115,7 +115,7 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
             lat={cluster.lat}
             lng={cluster.lng}
             key={`c-${i}`}
-            title={`${cluster.count} places, click to zoom in`}
+            title={`${cluster.count} 個地點，點擊放大`}
           >
             {cluster.count}
           </div>
@@ -123,7 +123,7 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
       </GoogleMapReact>
 
       {weatherInfo && (
-        <Paper elevation={3} className={classes.weather} aria-label="Weather at map centre">
+        <Paper elevation={3} className={classes.weather} aria-label="地圖中心的天氣">
           <span className={classes.weatherIcon}>{weatherInfo.icon}</span>
           <span>
             <strong>{Math.round(weather.temperature_2m)}°C</strong>
@@ -136,11 +136,11 @@ const Map = ({ coords, zoom, places, setCoords, setZoom, setBounds, setChildClic
       <Paper elevation={3} className={classes.labelToggle}>
         <FormControlLabel
           control={<Switch checked={smartLabels} onChange={(e) => setSmartLabels(e.target.checked)} color="primary" size="small" />}
-          label="Smart labels"
+          label="智慧標籤"
         />
         {smartLabels && (
           <Typography variant="caption" color="textSecondary" component="div">
-            {layout.cards.length} cards · {layout.dots.length} dots · {layout.clusters.length} clusters
+            卡片 {layout.cards.length} · 圓點 {layout.dots.length} · 群集 {layout.clusters.length}
           </Typography>
         )}
       </Paper>

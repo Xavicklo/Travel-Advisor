@@ -14,9 +14,9 @@ export const PLACE_TYPES = {
 };
 
 const STATUS_MESSAGES = {
-  REQUEST_DENIED: 'Google rejected the request. Check that "Places API" is enabled and allowed for this API key.',
-  OVER_QUERY_LIMIT: 'Google Places quota reached. Please try again later.',
-  INVALID_REQUEST: 'Invalid search request.',
+  REQUEST_DENIED: 'Google 拒絕了這次查詢：請確認已啟用「Places API」，而且這把金鑰允許使用它。',
+  OVER_QUERY_LIMIT: 'Google Places 查詢額度已用完，請稍後再試。',
+  INVALID_REQUEST: '查詢參數有誤。',
 };
 
 /** Google's result -> the shape our components use. */
@@ -61,7 +61,7 @@ export const getPlacesData = (map, type, bounds) => {
       } else if (status === ZERO_RESULTS) {
         resolve([]);
       } else {
-        reject(new Error(STATUS_MESSAGES[status] || `Could not load places (${status}).`));
+        reject(new Error(STATUS_MESSAGES[status] || `無法載入地點（${status}）。`));
       }
     });
   });

@@ -22,12 +22,12 @@ export const getWeatherData = async (lat, lng) => {
 
 /** WMO weather code -> emoji + short label. */
 export const describeWeather = (code, isDay = 1) => {
-  if (code === 0) return { icon: isDay ? '☀️' : '🌙', text: 'Clear' };
-  if (code <= 2) return { icon: isDay ? '🌤️' : '☁️', text: 'Partly cloudy' };
-  if (code === 3) return { icon: '☁️', text: 'Overcast' };
-  if (code <= 48) return { icon: '🌫️', text: 'Fog' };
-  if (code <= 67 || (code >= 80 && code <= 82)) return { icon: '🌧️', text: 'Rain' };
-  if (code <= 77 || code === 85 || code === 86) return { icon: '🌨️', text: 'Snow' };
-  if (code >= 95) return { icon: '⛈️', text: 'Thunderstorm' };
-  return { icon: '🌡️', text: 'Unknown' };
+  if (code === 0) return { icon: isDay ? '☀️' : '🌙', text: '晴朗' };
+  if (code <= 2) return { icon: isDay ? '🌤️' : '☁️', text: '多雲' };
+  if (code === 3) return { icon: '☁️', text: '陰天' };
+  if (code <= 48) return { icon: '🌫️', text: '霧' };
+  if (code <= 67 || (code >= 80 && code <= 82)) return { icon: '🌧️', text: '下雨' };
+  if (code <= 77 || code === 85 || code === 86) return { icon: '🌨️', text: '下雪' };
+  if (code >= 95) return { icon: '⛈️', text: '雷雨' };
+  return { icon: '🌡️', text: '未知' };
 };
