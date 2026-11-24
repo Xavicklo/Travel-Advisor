@@ -91,22 +91,52 @@ export const getPlacesData = (map, type, area, keyword = '') => {
     });
   };
 
+  const { OK, ZERO_RESULTS } = maps.places.PlacesServiceStatus;
+
+  // Text Search fallback: Nearby Search's keyword only matches names and short
+  // descriptions, so "汽車旅館" misses motels called "XX Motel" or "XX 精品旅館".
+  // Text Search understands what the words mean. It's used only when Nearby Search
+  // found nothing, so a normal search still costs one request.
+  let usedTextSearch = false;
+  const textSearchFallback = (current) => {
+    usedTextSearch = true;
+    page = 0;
+    waiting = current;
+    service.textSearch({
+      query: keyword.trim(),
+      location: area.center,
+      radius: Math.min(area.radiusKm * 1000, MAX_RADIUS_M),
+      type: PLACE_TYPES[type],
+    }, handlePage);
+  };
+
+  function handlePage(results, status, pagination) {
+    const current = waiting;
+    waiting = null;
+    if (!current) return;
+    page += 1;
+    if (status === OK) {
+      const places = toPlaces(results);
+      // Nothing usable inside the circle on the first page: try the smarter search once
+      if (!places.length && !pagination?.hasNextPage && request.keyword && !usedTextSearch) {
+        textSearchFallback(current);
+        return;
+      }
+      current.resolve({ places, loadMore: makeLoadMore(pagination, Date.now()) });
+    } else if (status === ZERO_RESULTS) {
+      if (request.keyword && !usedTextSearch && page === 1) {
+        textSearchFallback(current);
+        return;
+      }
+      current.resolve({ places: [], loadMore: null });
+    } else {
+      current.reject(new Error(STATUS_MESSAGES[status] || `無法載入地點（${status}）。`));
+    }
+  }
+
   return new Promise((resolve, reject) => {
     waiting = { resolve, reject };
-    service.nearbySearch(request, (results, status, pagination) => {
-      const current = waiting;
-      waiting = null;
-      if (!current) return;
-      page += 1;
-      const { OK, ZERO_RESULTS } = maps.places.PlacesServiceStatus;
-      if (status === OK) {
-        current.resolve({ places: toPlaces(results), loadMore: makeLoadMore(pagination, Date.now()) });
-      } else if (status === ZERO_RESULTS) {
-        current.resolve({ places: [], loadMore: null });
-      } else {
-        current.reject(new Error(STATUS_MESSAGES[status] || `無法載入地點（${status}）。`));
-      }
-    });
+    service.nearbySearch(request, handlePage);
   });
 };
 
