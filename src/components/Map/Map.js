@@ -16,7 +16,7 @@ import MAP_THEMES, { getTheme } from '../../mapThemes';
 import useLocalStorage from '../../utils/useLocalStorage';
 import { describeWeather } from '../../api/weather';
 import { layoutLabels, labelLevels, shortName } from '../../utils/labelLayout';
-import { getKind, storeChain } from '../../utils/categories';
+import { getKind, storeChain, CHAIN_COLORS } from '../../utils/categories';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const MAX_ZOOM = 19;
@@ -27,8 +27,13 @@ const KindIcon = ({ kind, classes, size = 22, name = '' }) => {
   const { Icon, color, label } = getKind(kind);
   // Convenience stores: the chain's short name (7 / 全 / 萊 / OK) instead of the generic icon
   const chain = kind === 'store' ? storeChain(name) : null;
+  const chainColor = chain ? CHAIN_COLORS[chain] : null;
   return (
-    <span className={classes.kindIcon} style={{ backgroundColor: color, width: size, height: size }} title={label}>
+    <span
+      className={classes.kindIcon}
+      style={{ backgroundColor: chainColor ? chainColor.bg : color, color: chainColor ? chainColor.fg : undefined, width: size, height: size }}
+      title={label}
+    >
       {chain ? (
         <span className={classes.chainText} style={{ fontSize: size * (chain.length > 1 ? 0.42 : 0.55) }}>{chain}</span>
       ) : (
