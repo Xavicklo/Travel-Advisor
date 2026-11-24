@@ -23,6 +23,7 @@ export default makeStyles((theme) => ({
     display: 'flex',
     flexWrap: 'wrap',
     gap: 6,
+    alignItems: 'center',
   },
   recent: {
     display: 'flex',

@@ -65,6 +65,16 @@ const App = () => {
 
   // Saved in the browser (localStorage), so they're still there next time
   const [recentSearches, setRecentSearches] = useLocalStorage('travel-advisor:recent-searches', []);
+  // The user's own last 3 keywords per category, shown as chips under the keyword box
+  const [recentKeywords, setRecentKeywords] = useLocalStorage('travel-advisor:recent-keywords', {});
+  useEffect(() => {
+    const word = keyword.trim();
+    if (!word) return;
+    setRecentKeywords((prev) => ({
+      ...prev,
+      [type]: [word, ...(prev[type] || []).filter((w) => w !== word)].slice(0, 3), // newest first, oldest dropped
+    }));
+  }, [keyword, type, setRecentKeywords]);
   const [favorites, setFavorites] = useLocalStorage('travel-advisor:favorites', []);
 
   const [weather, setWeather] = useState(null);
@@ -390,6 +400,11 @@ const App = () => {
       loadDetails={loadDetails}
       nearest={nearest}
       recentSearches={recentSearches}
+      recentKeywords={recentKeywords[type] || []}
+      onRemoveKeyword={(word) => setRecentKeywords((prev) => ({
+        ...prev,
+        [type]: (prev[type] || []).filter((w) => w !== word),
+      }))}
       onApplySearch={applySearch}
       onRemoveSearch={removeSearch}
       favorites={favoritesWithDistance}

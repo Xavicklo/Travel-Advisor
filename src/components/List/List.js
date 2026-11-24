@@ -27,7 +27,7 @@ import StarIcon from '@material-ui/icons/Star';
 
 import PlaceDetails from '../PlaceDetails/PlaceDetails';
 import PlaceRow from '../PlaceRow/PlaceRow';
-import { QUICK_KEYWORDS, KEYWORD_PLACEHOLDER } from '../../utils/categories';
+import { KEYWORD_PLACEHOLDER } from '../../utils/categories';
 import {
   RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
 } from '../../utils/radius';
@@ -81,6 +81,8 @@ const List = ({
   setType,
   keyword,
   setKeyword,
+  recentKeywords = [],
+  onRemoveKeyword,
   rating,
   setRating,
   radiusKm,
@@ -191,39 +193,21 @@ const List = ({
                 ),
               }}
             />
-            <div className={classes.chips}>
-              {QUICK_KEYWORDS[type].map((word) => (
-                <Chip
-                  key={word}
-                  label={word}
-                  size="small"
-                  clickable
-                  color={keyword === word ? 'primary' : 'default'}
-                  onClick={() => applyKeyword(keyword === word ? '' : word)}
-                />
-              ))}
-            </div>
-            {/* Recent keyword searches (saved in the browser): one click restores place, radius and keyword */}
-            {recentSearches.length > 0 && (
-              <div className={classes.recent}>
-                <Typography variant="caption" color="textSecondary" className={classes.recentTitle}>
-                  <HistoryIcon fontSize="inherit" /> 最近搜尋
-                </Typography>
-                <div className={classes.chips}>
-                  {recentSearches.map((search) => (
-                    <Chip
-                      key={search.id}
-                      size="small"
-                      variant="outlined"
-                      color="primary"
-                      clickable
-                      label={`${search.keyword} · ${formatRadius(search.radiusKm)} · ${search.label}`}
-                      onClick={() => onApplySearch(search)}
-                      onDelete={() => onRemoveSearch(search.id)}
-                      className={classes.recentChip}
-                    />
-                  ))}
-                </div>
+            {/* The user's own last 3 keywords for this category (saved in the browser) */}
+            {recentKeywords.length > 0 && (
+              <div className={classes.chips}>
+                <HistoryIcon fontSize="small" color="disabled" />
+                {recentKeywords.map((word) => (
+                  <Chip
+                    key={word}
+                    label={word}
+                    size="small"
+                    clickable
+                    color={keyword === word ? 'primary' : 'default'}
+                    onClick={() => applyKeyword(keyword === word ? '' : word)}
+                    onDelete={() => onRemoveKeyword(word)}
+                  />
+                ))}
               </div>
             )}
         </>
