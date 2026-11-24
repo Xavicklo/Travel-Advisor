@@ -102,20 +102,22 @@ export const looksLikePlace = (text) => {
 /**
  * Which convenience-store chain a place is, from its name, as a short text tag for the
  * marker (plain text in our own style, not the chains' logos).
- * @returns {string|null} '7' | '全' | '萊' | 'OK' | null
+ * @returns {string|null} '7' | '全' | '萊' | 'OK' | '美' | null
  */
 // One colour per chain so they're easy to tell apart (colours chosen by the project owner)
 export const CHAIN_COLORS = {
   7: { bg: '#1b9e4b', fg: '#fff' }, // green
-  全: { bg: '#29a9e1', fg: '#fff' }, // light blue
+  全: { bg: '#1e88e5', fg: '#fff' }, // blue (a bit deeper, so white text reads well)
   萊: { bg: '#ec5f9a', fg: '#fff' }, // pink
   OK: { bg: '#e53935', fg: '#fff' }, // red
+  美: { bg: '#fb8c00', fg: '#fff' }, // orange
 };
 const CHAINS = [
   [/7-?eleven|7-?11|統一超商|小七/i, '7'],
   [/全家|family ?mart/i, '全'],
   [/萊爾富|hi-?life/i, '萊'],
   [/ok ?(超商|mart)|^ok\b/i, 'OK'],
+  [/美廉社|simple ?mart/i, '美'],
 ];
 export const storeChain = (name = '') => {
   const hit = CHAINS.find(([re]) => re.test(name));
