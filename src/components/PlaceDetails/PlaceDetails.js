@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box, Typography, Button, Card, CardMedia, CardContent, CardActions, Chip, Avatar, Collapse, CircularProgress, Link,
+  Box, Typography, Button, Card, CardMedia, CardContent, CardActions, Chip, Avatar, Collapse, CircularProgress, Link, IconButton,
 } from '@material-ui/core';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import RoomIcon from '@material-ui/icons/Room';
 import LocationOnIcon from '@material-ui/icons/LocationOn';
 import DirectionsIcon from '@material-ui/icons/Directions';
 import RateReviewIcon from '@material-ui/icons/RateReview';
@@ -29,7 +32,7 @@ const CategoryChip = ({ kind }) => {
   );
 };
 
-const PlaceDetails = ({ place, selected, refProp, loadDetails }) => {
+const PlaceDetails = ({ place, selected, refProp, loadDetails, isFavorite = false, onToggleFavorite, onShowOnMap }) => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [details, setDetails] = useState(null);
@@ -56,8 +59,18 @@ const PlaceDetails = ({ place, selected, refProp, loadDetails }) => {
   };
 
   return (
-    <Card elevation={6} className={selected ? classes.selected : undefined}>
+    <Card elevation={6} className={`${classes.card} ${selected ? classes.selected : ''}`}>
       <CardMedia style={{ height: 220 }} image={place.photoUrl || PLACEHOLDER_IMAGE} title={place.name} />
+      {onToggleFavorite && (
+        <IconButton
+          className={classes.favButton}
+          aria-label={isFavorite ? '取消收藏' : '加入收藏'}
+          title={isFavorite ? '取消收藏' : '加入收藏'}
+          onClick={() => onToggleFavorite(place)}
+        >
+          {isFavorite ? <FavoriteIcon style={{ color: '#e53935' }} /> : <FavoriteBorderIcon />}
+        </IconButton>
+      )}
       <CardContent>
         <Typography gutterBottom variant="h5">{place.name}</Typography>
         <Box display="flex" alignItems="center" flexWrap="wrap" style={{ gap: 8 }}>
@@ -94,6 +107,11 @@ const PlaceDetails = ({ place, selected, refProp, loadDetails }) => {
         <Button size="small" color="primary" startIcon={<DirectionsIcon />} onClick={() => openInNewTab(directionsUrl(place))}>
           導航
         </Button>
+        {onShowOnMap && (
+          <Button size="small" color="primary" startIcon={<RoomIcon />} onClick={() => onShowOnMap(place)}>
+            在地圖上看
+          </Button>
+        )}
       </CardActions>
 
       <Collapse in={open} timeout="auto" unmountOnExit>

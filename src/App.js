@@ -4,6 +4,8 @@ import { CssBaseline, Grid } from '@material-ui/core';
 import { getPlacesData, getPlaceDetails, findNearest } from './api/places';
 import { getWeatherData } from './api/weather';
 import { score } from './utils/labelLayout';
+import { distanceKm } from './utils/geo';
+import useLocalStorage from './utils/useLocalStorage';
 import Header from './components/Header/Header';
 import List from './components/List/List';
 import Map from './components/Map/Map';
@@ -11,6 +13,7 @@ import Map from './components/Map/Map';
 // Fallback when the user blocks location access: Taipei 101.
 const DEFAULT_COORDS = { lat: 25.0339, lng: 121.5645 };
 const DEFAULT_RADIUS_KM = 3;
+const MAX_RECENT_SEARCHES = 8;
 
 const SORTERS = {
   recommended: (a, b) => score(b) - score(a), // rating weighted by number of reviews
@@ -31,6 +34,11 @@ const App = () => {
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState('');
   const [fitNonce, setFitNonce] = useState(0); // bump to zoom the map to the search circle
+  const [centerLabel, setCenterLabel] = useState(''); // name of the search centre, e.g. 我的位置 or a searched place
+
+  // Saved in the browser (localStorage), so they're still there next time
+  const [recentSearches, setRecentSearches] = useLocalStorage('travel-advisor:recent-searches', []);
+  const [favorites, setFavorites] = useLocalStorage('travel-advisor:favorites', []);
   const [zoom, setZoom] = useState(14);
   const [bounds, setBounds] = useState(null);
 
@@ -74,6 +82,7 @@ const App = () => {
         const here = { lat: latitude, lng: longitude };
         setUserLocation(here);
         setCoords(here);
+        setCenterLabel('我的位置');
         setFitNonce((n) => n + 1);
         setLocating(false);
       },
@@ -143,6 +152,18 @@ const App = () => {
           if (cancelled) return;
           setPlaces(data.filter((place) => place.reviews > 0));
           setNearest(null);
+          // Remember keyword searches that found something (newest first, no duplicates)
+          if (type === 'restaurants' && keyword.trim() && data.length > 0) {
+            const entry = {
+              id: `${keyword.trim()}|${centerKey}|${radiusKm}`,
+              keyword: keyword.trim(),
+              radiusKm,
+              center,
+              label: centerLabel || `${center.lat.toFixed(3)}, ${center.lng.toFixed(3)}`,
+              savedAt: Date.now(),
+            };
+            setRecentSearches((prev) => [entry, ...prev.filter((s) => s.id !== entry.id)].slice(0, MAX_RECENT_SEARCHES));
+          }
           // Nothing inside the circle for this keyword: find the closest one outside it.
           const activeKeyword = type === 'restaurants' ? keyword.trim() : '';
           if (data.length === 0 && activeKeyword) {
@@ -182,6 +203,43 @@ const App = () => {
 
   const loadDetails = useCallback((placeId) => getPlaceDetails(mapRef.current, placeId), []);
 
+  // Dragging the map moves the centre away from any named place.
+  const coordsRef = useRef(coords);
+  coordsRef.current = coords;
+  const handleMapMove = useCallback((next) => {
+    if (distanceKm(coordsRef.current, next) > 0.05) setCenterLabel(''); // moved more than 50 m
+    setCoords(next);
+  }, []);
+
+  // Re-run a saved search: same place, radius and keyword.
+  const applySearch = (search) => {
+    setType('restaurants');
+    setKeyword(search.keyword);
+    setRadiusKm(search.radiusKm);
+    setCoords(search.center);
+    setCenterLabel(search.label);
+    setFitNonce((n) => n + 1);
+  };
+  const removeSearch = (id) => setRecentSearches((prev) => prev.filter((s) => s.id !== id));
+
+  // Favourites: whole place objects, so they can be shown without another API call.
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
+  const toggleFavorite = (place) => setFavorites((prev) => (prev.some((f) => f.id === place.id)
+    ? prev.filter((f) => f.id !== place.id)
+    : [{ ...place, savedAt: Date.now() }, ...prev]));
+
+  // Favourites show their distance from the current search centre.
+  const favoritesWithDistance = useMemo(
+    () => favorites.map((f) => ({ ...f, distanceKm: distanceKm(coords, f) })),
+    [favorites, coords],
+  );
+
+  const showOnMap = (place) => {
+    setCoords({ lat: place.lat, lng: place.lng });
+    setCenterLabel(place.name);
+    setZoom(17);
+  };
+
   const onLoad = (autoC) => setAutocomplete(autoC);
 
   const onPlaceChanged = () => {
@@ -189,6 +247,7 @@ const App = () => {
     const location = place?.geometry?.location;
     if (!location) return; // user pressed Enter without choosing a suggestion
     setCoords({ lat: location.lat(), lng: location.lng() });
+    setCenterLabel(place.name || '');
   };
 
   return (
@@ -215,6 +274,13 @@ const App = () => {
             setSortBy={setSortBy}
             loadDetails={loadDetails}
             nearest={nearest}
+            recentSearches={recentSearches}
+            onApplySearch={applySearch}
+            onRemoveSearch={removeSearch}
+            favorites={favoritesWithDistance}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={toggleFavorite}
+            onShowOnMap={showOnMap}
             onLocate={locateMe}
             locating={locating}
             locateError={locateError}
@@ -224,7 +290,7 @@ const App = () => {
           <Map
             setChildClicked={setChildClicked}
             setBounds={setBounds}
-            setCoords={setCoords}
+            setCoords={handleMapMove}
             coords={coords}
             zoom={zoom}
             setZoom={setZoom}

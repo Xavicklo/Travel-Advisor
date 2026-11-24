@@ -14,7 +14,11 @@ import {
   Slider,
   LinearProgress,
   Button,
+  Tabs,
+  Tab,
 } from '@material-ui/core';
+import HistoryIcon from '@material-ui/icons/History';
+import FavoriteIcon from '@material-ui/icons/Favorite';
 import MyLocationIcon from '@material-ui/icons/MyLocation';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -47,10 +51,18 @@ const List = ({
   onLocate,
   locating,
   locateError,
+  recentSearches = [],
+  onApplySearch,
+  onRemoveSearch,
+  favorites = [],
+  favoriteIds,
+  onToggleFavorite,
+  onShowOnMap,
 }) => {
   const [elRefs, setElRefs] = useState([]);
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
   const [radiusDraft, setRadiusDraft] = useState(radiusKm); // slider position while dragging
+  const [tab, setTab] = useState('results'); // results | favorites
   const classes = useStyles();
 
   useEffect(() => {
@@ -155,6 +167,29 @@ const List = ({
               ),
             }}
           />
+          {/* Recent keyword searches (saved in the browser): one click restores place, radius and keyword */}
+          {recentSearches.length > 0 && (
+            <div className={classes.recent}>
+              <Typography variant="caption" color="textSecondary" className={classes.recentTitle}>
+                <HistoryIcon fontSize="inherit" /> 最近搜尋
+              </Typography>
+              <div className={classes.chips}>
+                {recentSearches.map((search) => (
+                  <Chip
+                    key={search.id}
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    clickable
+                    label={`${search.keyword} · ${search.radiusKm} 公里 · ${search.label}`}
+                    onClick={() => onApplySearch(search)}
+                    onDelete={() => onRemoveSearch(search.id)}
+                    className={classes.recentChip}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <div className={classes.chips}>
             {FOOD_KEYWORDS.map((word) => (
               <Chip
@@ -170,7 +205,46 @@ const List = ({
         </div>
       )}
 
-      {isLoading ? (
+      <Tabs
+        value={tab}
+        onChange={(e, value) => setTab(value)}
+        indicatorColor="primary"
+        textColor="primary"
+        variant="fullWidth"
+        className={classes.tabs}
+      >
+        <Tab value="results" label="搜尋結果" />
+        <Tab value="favorites" label={`我的收藏（${favorites.length}）`} icon={<FavoriteIcon fontSize="small" />} className={classes.favTab} />
+      </Tabs>
+
+      {tab === 'favorites' && (
+        <>
+          {favorites.length === 0 ? (
+            <Typography color="textSecondary" className={classes.message}>
+              還沒有收藏。在店家卡片上按 ♥ 就會存在這裡，下次可以直接選。
+            </Typography>
+          ) : (
+            <Typography variant="body2" color="textSecondary" className={classes.message}>
+              共 {favorites.length} 個收藏，距離以目前的搜尋中心計算
+            </Typography>
+          )}
+          <Grid container spacing={3} className={classes.list}>
+            {favorites.map((place) => (
+              <Grid key={place.id} item xs={12}>
+                <PlaceDetails
+                  place={place}
+                  loadDetails={loadDetails}
+                  isFavorite
+                  onToggleFavorite={onToggleFavorite}
+                  onShowOnMap={onShowOnMap}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </>
+      )}
+
+      {tab === 'results' && (isLoading ? (
         <div className={classes.loading}>
           <CircularProgress size="4rem" />
         </div>
@@ -227,12 +301,19 @@ const List = ({
           <Grid container spacing={3} className={classes.list}>
             {places.map((place, i) => (
               <Grid ref={elRefs[i]} key={place.id} item xs={12}>
-                <PlaceDetails selected={childClicked === i} refProp={elRefs[i]} place={place} loadDetails={loadDetails} />
+                <PlaceDetails
+                  selected={childClicked === i}
+                  refProp={elRefs[i]}
+                  place={place}
+                  loadDetails={loadDetails}
+                  isFavorite={favoriteIds?.has(place.id)}
+                  onToggleFavorite={onToggleFavorite}
+                />
               </Grid>
             ))}
           </Grid>
         </>
-      )}
+      ))}
     </div>
   );
 };

@@ -1,6 +1,18 @@
 import { makeStyles } from '@material-ui/core/styles';
 
 export default makeStyles((theme) => ({
+  card: {
+    position: 'relative',
+  },
+  favButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    background: 'rgba(255,255,255,0.92)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+    transition: 'transform 0.15s ease',
+    '&:hover': { background: '#fff', transform: 'scale(1.12)' },
+  },
   reviewsBox: {
     background: '#f7f9fb',
     borderTop: '1px solid #e6eaef',

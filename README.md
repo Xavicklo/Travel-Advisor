@@ -13,6 +13,7 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Distance slider (1–50 km):** searches a circle around the map centre, draws the circle on the map and zooms to fit it. Fetches up to 3 pages (60 places).
 - **Search centre pin** fixed at the middle of the map (distances are measured from here) and a **"以我的位置搜尋"** button that moves the search to your GPS position, shown as a pulsing blue dot
 - **No results? Nearest match:** if nothing matches inside the circle, a Text Search finds the closest match (e.g. the nearest 陶板屋) and offers "擴大範圍到 N 公里"
+- **Recent searches and favourites** saved in the browser (localStorage): one click re-runs "麻辣鍋 · 3 公里 · 我的位置", and the ♥ on a card saves the place to the 我的收藏 tab. No account or database needed.
 - **Sort** by recommended, highest rating, nearest or most reviewed; every card shows its distance (haversine)
 - **Reviews on demand:** "查看評論" loads Google reviews, phone and website with Place Details, only when the user clicks
 - **Food keyword search** (火鍋 hot pot, 涼麵 cold noodles, 咖哩飯 curry rice…): sent to Nearby Search as `keyword`, with quick chips
