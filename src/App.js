@@ -6,6 +6,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { getPlacesData, getPlaceDetails, findNearest } from './api/places';
 import { getWeatherData } from './api/weather';
 import { score } from './utils/labelLayout';
+import { detectCategory } from './utils/categories';
 import { distanceKm } from './utils/geo';
 import useLocalStorage from './utils/useLocalStorage';
 import Header from './components/Header/Header';
@@ -13,6 +14,7 @@ import List from './components/List/List';
 // Named MapView so it doesn't shadow JavaScript's built-in Map (used for the search cache)
 import MapView from './components/Map/Map';
 import useStyles, { PANEL_WIDTH, PANEL_GAP } from './AppStyles';
+import BottomSheet, { snapHeight } from './components/BottomSheet/BottomSheet';
 
 // Fallback when the user blocks location access: Taipei 101.
 const DEFAULT_COORDS = { lat: 25.0339, lng: 121.5645 };
@@ -32,7 +34,13 @@ const withReviews = (list) => list.filter((place) => place.reviews > 0);
 const App = () => {
   const classes = useStyles();
   const isDesktop = useMediaQuery('(min-width:900px)');
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(true); // desktop side panel
+  const [sheetSnap, setSheetSnap] = useState('peek'); // phone bottom sheet: peek | half | full; closed by default
+  // Show results: open the desktop panel, or pull the phone sheet up to half if it's closed
+  const openPanel = useCallback(() => {
+    setPanelOpen(true);
+    setSheetSnap((snap) => (snap === 'peek' ? 'half' : snap));
+  }, []);
   const [selectedPlace, setSelectedPlace] = useState(null); // the place shown in the panel's details view
 
   const [type, setType] = useState('restaurants');
@@ -149,12 +157,12 @@ const App = () => {
     if (!mapsLoaded || !circleRef.current) return;
     const padding = isDesktop
       ? { top: 24, right: 24, bottom: 24, left: (panelOpen ? PANEL_WIDTH + PANEL_GAP : 0) + 24 }
-      : { top: 130, right: 16, bottom: panelOpen ? window.innerHeight * 0.5 + 16 : 72, left: 16 };
+      : { top: 130, right: 56, bottom: snapHeight(sheetSnap) + 16, left: 16 };
     mapRef.current.fitBounds(circleRef.current.getBounds(), padding);
   }, [mapsLoaded, radiusKm, fitNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Search: only when the search centre, radius, type or keyword changes ----
-  const activeKeyword = type === 'restaurants' ? keyword.trim() : '';
+  const activeKeyword = keyword.trim(); // e.g. 火鍋 (restaurants), 汽車旅館 (hotels), 夜市 (attractions)
   // Same type + keyword + radius + centre (rounded to ~100 m) = same search
   const searchKey = `${type}|${activeKeyword}|${radiusKm}|${searchCenter.lat.toFixed(3)},${searchCenter.lng.toFixed(3)}`;
 
@@ -192,6 +200,7 @@ const App = () => {
           if (activeKeyword && found.length > 0) {
             const entry = {
               id: searchKey,
+              type,
               keyword: activeKeyword,
               radiusKm,
               center,
@@ -261,7 +270,7 @@ const App = () => {
 
   // Re-run a saved search: same place, radius and keyword.
   const applySearch = (search) => {
-    setType('restaurants');
+    setType(search.type || 'restaurants');
     setKeyword(search.keyword);
     setRadiusKm(search.radiusKm);
     searchAt(search.center, search.label);
@@ -283,7 +292,7 @@ const App = () => {
   // Pick a place (from the list or the map): show its details in the panel.
   const selectPlace = (place) => {
     setSelectedPlace(place);
-    setPanelOpen(true);
+    openPanel();
   };
   // The selected place's position in the current results (for the map's marker layout)
   const selectedIndex = selectedPlace ? visiblePlaces.findIndex((p) => p.id === selectedPlace.id) : -1;
@@ -300,8 +309,20 @@ const App = () => {
   const onPlaceChanged = () => {
     const place = autocomplete?.getPlace();
     const location = place?.geometry?.location;
-    if (!location) return; // user pressed Enter without choosing a suggestion
-    searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '');
+    if (location) {
+      // Picked a suggestion (a city, address or landmark): search around it
+      searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '');
+      return;
+    }
+    // Typed something and pressed Enter, e.g. "火鍋", "motel", "夜市": an all-in-one search.
+    // Work out the category from the words, then search around the current map view.
+    const text = (place?.name || '').trim();
+    if (!text) return;
+    setType(detectCategory(text));
+    setKeyword(text);
+    setSelectedPlace(null);
+    if (movedAway) searchAt(coords, '');
+    openPanel();
   };
 
   const header = (
@@ -379,7 +400,7 @@ const App = () => {
           weather={weather}
           userLocation={userLocation}
           leftInset={isDesktop && panelOpen ? PANEL_WIDTH + PANEL_GAP : 0}
-          bottomInset={!isDesktop ? (panelOpen ? '50vh' : '56px') : 0}
+          bottomInset={!isDesktop ? `${snapHeight(sheetSnap)}px` : 0}
           onMapsLoaded={(map) => {
             mapRef.current = map;
             setMapsLoaded(true);
@@ -395,18 +416,16 @@ const App = () => {
       ) : (
         <>
           <Paper elevation={6} className={classes.mobileHeader}>{header}</Paper>
-          <Paper elevation={8} className={`${classes.sheet} ${panelOpen ? '' : classes.sheetCollapsed}`}>
-            <div
-              className={classes.handle}
-              role="button"
-              tabIndex={0}
-              onClick={() => setPanelOpen((open) => !open)}
-              onKeyDown={(e) => e.key === 'Enter' && setPanelOpen((open) => !open)}
-            >
-              {panelOpen ? '收起' : `顯示 ${visiblePlaces.length} 個結果`}
-            </div>
-            <div className={classes.panelBody}>{list}</div>
-          </Paper>
+          {/* Swipe the handle up or down, like Apple/Google Maps */}
+          <BottomSheet
+            snap={sheetSnap}
+            onSnapChange={setSheetSnap}
+            summary={selectedPlace ? selectedPlace.name
+              : isLoading ? '搜尋中…'
+                : `${visiblePlaces.length} 個結果 · 往上滑查看`}
+          >
+            {list}
+          </BottomSheet>
         </>
       )}
     </div>

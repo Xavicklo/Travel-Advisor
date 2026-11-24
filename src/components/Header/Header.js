@@ -19,9 +19,10 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded, actions = null }) => {
         <SearchIcon />
       </div>
       <InputBase
-        placeholder={mapsLoaded ? '搜尋城市、景點或地址…' : '地圖載入中…'}
+        // All-in-one: pick a suggested place to go there, or press Enter to search for it nearby
+        placeholder={mapsLoaded ? '搜尋美食、住宿、景點或地點…' : '地圖載入中…'}
         disabled={!mapsLoaded}
-        inputProps={{ 'aria-label': '搜尋地點' }}
+        inputProps={{ 'aria-label': '搜尋美食、住宿、景點或地點' }}
         classes={{ root: classes.inputRoot, input: classes.inputInput }}
       />
     </div>

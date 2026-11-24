@@ -25,7 +25,7 @@ import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
 
 import PlaceDetails from '../PlaceDetails/PlaceDetails';
 import PlaceRow from '../PlaceRow/PlaceRow';
-import { FOOD_KEYWORDS } from '../../utils/categories';
+import { QUICK_KEYWORDS, KEYWORD_PLACEHOLDER } from '../../utils/categories';
 import {
   RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
 } from '../../utils/radius';
@@ -99,7 +99,7 @@ const List = ({
 
   const changeType = (value) => {
     setType(value);
-    if (value !== 'restaurants') setKeyword(''); // food keywords only make sense for restaurants
+    setKeyword(''); // each category has its own keywords (火鍋 means nothing for hotels)
   };
 
   // ---- Details of one place (replaces the list, like Google Maps) ----
@@ -142,13 +142,13 @@ const List = ({
           ))}
         </div>
 
-        {type === 'restaurants' && (
-          <>
+        {/* Keyword search for every category: food, kinds of stay, kinds of sights */}
+        <>
             <TextField
               fullWidth
               variant="outlined"
               size="small"
-              placeholder="想吃什麼？例如：火鍋、涼麵、咖哩飯"
+              placeholder={KEYWORD_PLACEHOLDER[type]}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -171,7 +171,7 @@ const List = ({
               }}
             />
             <div className={classes.chips}>
-              {FOOD_KEYWORDS.map((word) => (
+              {QUICK_KEYWORDS[type].map((word) => (
                 <Chip
                   key={word}
                   label={word}
@@ -205,8 +205,7 @@ const List = ({
                 </div>
               </div>
             )}
-          </>
-        )}
+        </>
 
         {/* Two sliders, one above the other: distance (searches) and minimum rating (filters instantly) */}
         <div className={classes.sliders}>

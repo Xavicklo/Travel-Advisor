@@ -6,7 +6,7 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 
 ## Features
 
-- **Google Maps-style layout:** full-screen map with a floating side panel (search, filters, compact result rows, place details). On phones the panel becomes a bottom sheet. Weather, marker mode and "my location" sit in the corners.
+- **Google Maps-style layout:** full-screen map with a floating side panel (search, filters, compact result rows, place details). On phones the panel becomes a draggable bottom sheet (peek / half / full, flick or drag to snap). Weather, marker mode and "my location" sit in the corners.
 
 - Interactive Google Map with custom map styling
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
@@ -18,6 +18,8 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Recent searches and favourites** saved in the browser (localStorage): one click re-runs "麻辣鍋 · 3 公里 · 我的位置", and the ♥ on a card saves the place to the 我的收藏 tab. No account or database needed.
 - **Sort** by recommended, highest rating, nearest or most reviewed; every card shows its distance (haversine)
 - **Reviews on demand:** "查看評論" loads Google reviews, phone and website with Place Details, only when the user clicks
+- **All-in-one search box:** pick a suggested place to go there, or type e.g. 火鍋 / motel / 夜市 and press Enter. The category is detected from the words (`detectCategory`) and the search runs nearby
+- **Keyword search in every category** with quick chips (火鍋, 汽車旅館, 夜市...)
 - **Food keyword search** (火鍋 hot pot, 涼麵 cold noodles, 咖哩飯 curry rice…): sent to Nearby Search as `keyword`, with quick chips
 - **Category filtering and icons:** results are checked against Google's `types`, so a hotel with a restaurant doesn't appear under restaurants. Each place gets its own icon and colour (restaurant, café, bakery, bar, lodging, attraction) on the map and in the list
 - **Smart labels (marker collision handling):** important places get full cards, the rest become rating dots, and dots that overlap merge into clusters (see below)

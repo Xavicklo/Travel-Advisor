@@ -46,5 +46,31 @@ export const belongsTo = (types = [], category) => {
   return !isLodging; // restaurants and attractions: no hotels
 };
 
-/** Quick food keywords shown as chips under the restaurant search box. */
-export const FOOD_KEYWORDS = ['火鍋', '涼麵', '咖哩飯', '拉麵', '牛肉麵', '燒肉', '早午餐', '甜點', '咖啡'];
+/** Quick keywords shown as chips under the panel's search box, per category. */
+export const QUICK_KEYWORDS = {
+  restaurants: ['火鍋', '涼麵', '咖哩飯', '拉麵', '牛肉麵', '燒肉', '早午餐', '甜點', '咖啡'],
+  hotels: ['汽車旅館', '民宿', '青年旅館', '商務旅館', '溫泉', '親子', '寵物友善'],
+  attractions: ['夜市', '老街', '博物館', '公園', '步道', '觀景台', '寺廟', '親子景點'],
+};
+
+/** Placeholder text for the panel's search box, per category. */
+export const KEYWORD_PLACEHOLDER = {
+  restaurants: '想吃什麼？例如：火鍋、涼麵、咖哩飯',
+  hotels: '想住哪種？例如：汽車旅館、民宿、溫泉',
+  attractions: '想去哪玩？例如：夜市、老街、步道',
+};
+
+// Words that tell us what the user is looking for, for the header's all-in-one search
+const HOTEL_WORDS = /(旅館|旅店|飯店|酒店|民宿|住宿|青旅|背包客|膠囊|度假村|渡假村|villa|motel|hotel|hostel|inn|resort|b&b|airbnb)/i;
+const ATTRACTION_WORDS = /(景點|夜市|老街|博物館|美術館|紀念館|公園|步道|古蹟|寺|廟|宮|教堂|動物園|水族館|遊樂園|樂園|觀景|瀑布|海灘|沙灘|老屋|商圈|museum|park|temple|night market|zoo)/i;
+
+/**
+ * Which category a free-text search belongs to: "火鍋" -> restaurants,
+ * "motel" -> hotels, "夜市" -> attractions. Food is the default, since most
+ * free-text searches are things to eat.
+ */
+export const detectCategory = (text) => {
+  if (HOTEL_WORDS.test(text)) return 'hotels';
+  if (ATTRACTION_WORDS.test(text)) return 'attractions';
+  return 'restaurants';
+};

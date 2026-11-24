@@ -212,7 +212,8 @@ const Map = ({
         </Fab>
       </Tooltip>
 
-      {weatherInfo && (
+      {/* Weather only on larger screens; on phones it would cover the map */}
+      {weatherInfo && isDesktop && (
         <Paper elevation={3} className={classes.weather} style={isDesktop ? undefined : { top: 132 }} aria-label="搜尋中心的天氣">
           <span className={classes.weatherIcon}>{weatherInfo.icon}</span>
           <span>
@@ -223,10 +224,11 @@ const Map = ({
         </Paper>
       )}
 
-      <Paper elevation={3} className={classes.labelToggle} style={isDesktop ? undefined : { top: 196 }}>
+      <Paper elevation={3} className={`${classes.labelToggle} ${isDesktop ? '' : classes.labelToggleMobile}`}>
         <ToggleButtonGroup
           size="small"
           exclusive
+          orientation={isDesktop ? 'horizontal' : 'vertical'}
           value={labelMode}
           onChange={(e, value) => value && setLabelMode(value)}
           aria-label="標籤顯示方式"
@@ -235,9 +237,11 @@ const Map = ({
           <ToggleButton value="smart" className={classes.modeButton}>智慧卡片</ToggleButton>
           <ToggleButton value="all" className={classes.modeButton}>全部卡片</ToggleButton>
         </ToggleButtonGroup>
-        <Typography variant="caption" color="textSecondary" component="div" className={classes.modeStats}>
-          卡片 {layout.cards.length} · 圖示 {layout.dots.length} · 群集 {layout.clusters.length}
-        </Typography>
+        {isDesktop && (
+          <Typography variant="caption" color="textSecondary" component="div" className={classes.modeStats}>
+            卡片 {layout.cards.length} · 圖示 {layout.dots.length} · 群集 {layout.clusters.length}
+          </Typography>
+        )}
       </Paper>
     </div>
   );

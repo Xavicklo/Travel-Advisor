@@ -248,6 +248,13 @@ export default makeStyles((theme) => ({
     padding: 6,
     borderRadius: 10,
   },
+  // Phones: a slim vertical strip on the right edge, out of the way of the map
+  labelToggleMobile: {
+    top: 140,
+    right: 6,
+    padding: 3,
+    '& $modeButton': { padding: '6px 4px', fontSize: 11, writingMode: 'vertical-rl', letterSpacing: 2 },
+  },
   modeButton: {
     padding: '4px 10px',
     fontSize: 13,
