@@ -20,6 +20,8 @@ import FavoriteIcon from '@material-ui/icons/Favorite';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
 import RestaurantIcon from '@material-ui/icons/Restaurant';
+import AppsIcon from '@material-ui/icons/Apps';
+import LocalConvenienceStoreIcon from '@material-ui/icons/LocalConvenienceStore';
 import HotelIcon from '@material-ui/icons/Hotel';
 import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
 import RoomIcon from '@material-ui/icons/Room';
@@ -66,6 +68,8 @@ function RatingThumb(props) {
 }
 
 const TYPES = [
+  { value: 'all', label: '全部', Icon: AppsIcon }, // all four at once (default after picking a centre)
+  { value: 'stores', label: '超商', Icon: LocalConvenienceStoreIcon },
   { value: 'restaurants', label: '餐廳', Icon: RestaurantIcon },
   { value: 'hotels', label: '住宿', Icon: HotelIcon },
   { value: 'attractions', label: '景點', Icon: PhotoCameraIcon },

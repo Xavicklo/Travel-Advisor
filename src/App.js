@@ -21,6 +21,7 @@ const DEFAULT_COORDS = { lat: 25.0339, lng: 121.5645 };
 const DEFAULT_RADIUS_KM = 3;
 const MAX_RECENT_SEARCHES = 8;
 const CACHE_TTL_MS = 10 * 60 * 1000; // reuse identical searches for 10 minutes
+const ALL_CATEGORIES = ['stores', 'restaurants', 'hotels', 'attractions']; // 全部 = these four
 
 const SORTERS = {
   recommended: (a, b) => score(b) - score(a), // rating weighted by number of reviews
@@ -44,7 +45,7 @@ const App = () => {
   }, []);
   const [selectedPlace, setSelectedPlace] = useState(null); // the place shown in the panel's details view
 
-  const [type, setType] = useState('restaurants');
+  const [type, setType] = useState('all'); // all | stores | restaurants | hotels | attractions
   const [rating, setRating] = useState(0); // minimum stars, 0 = no minimum (rating slider)
   const [keyword, setKeyword] = useState(''); // food keyword, e.g. 火鍋 (restaurants only)
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM); // distance slider
@@ -96,7 +97,13 @@ const App = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Search at a new centre (and point the map there).
-  const searchAt = useCallback((center, label = '') => {
+  // newPlace: the user chose a new centre (address, long-press, my location), so show
+  // every category there; a category button narrows it down afterwards.
+  const searchAt = useCallback((center, label = '', { newPlace = false } = {}) => {
+    if (newPlace) {
+      setType('all');
+      setKeyword('');
+    }
     setCoords(center);
     setSearchCenter(center);
     setCenterLabel(label);
@@ -130,7 +137,7 @@ const App = () => {
       ({ coords: { latitude, longitude } }) => {
         const here = { lat: latitude, lng: longitude };
         setUserLocation(here);
-        searchAt(here, '我的位置');
+        searchAt(here, '我的位置', { newPlace: true });
         setLocating(false);
       },
       (err) => {
@@ -201,7 +208,27 @@ const App = () => {
     const timer = setTimeout(() => {
       setIsLoading(true);
       setError('');
-      getPlacesData(mapRef.current, type, { center, radiusKm }, activeKeyword)
+      // One category, or all four at once. Each category's results are cached under its own
+      // key too, so tapping 餐廳 after 全部 shows them instantly with no new request.
+      const centreKey = `${center.lat.toFixed(3)},${center.lng.toFixed(3)}`;
+      const fetchCategory = (cat) => {
+        const key = `${cat}|${activeKeyword}|${radiusKm}|${centreKey}`;
+        const hit = cacheRef.current.get(key);
+        if (hit && Date.now() - hit.time < CACHE_TTL_MS) return Promise.resolve(hit);
+        return getPlacesData(mapRef.current, cat, { center, radiusKm }, activeKeyword).then((res) => {
+          cacheRef.current.set(key, { ...res, time: Date.now() });
+          return res;
+        });
+      };
+      const request = type !== 'all' ? fetchCategory(type) : Promise.all(
+        ALL_CATEGORIES.map((cat) => fetchCategory(cat).catch((err) => ({ places: [], loadMore: null, error: err }))),
+      ).then((parts) => {
+        if (parts.every((p) => p.error)) throw parts[0].error;
+        const seen = new Set();
+        const merged = parts.flatMap((p) => p.places).filter((p) => !seen.has(p.id) && seen.add(p.id));
+        return { places: merged, loadMore: null }; // 載入更多: pick one category
+      });
+      request
         .then(({ places: found, loadMore: more }) => {
           if (cancelled) return;
           cacheRef.current.set(searchKey, { places: found, loadMore: more, time: Date.now() });
@@ -322,7 +349,7 @@ const App = () => {
     const location = place?.geometry?.location;
     if (location) {
       // Picked a suggestion (a city, address or landmark): search around it
-      searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '');
+      searchAt({ lat: location.lat(), lng: location.lng() }, place.name || '', { newPlace: true });
       return;
     }
     const text = (place?.name || '').trim();
@@ -330,7 +357,7 @@ const App = () => {
     // Typed an address or landmark and pressed Enter, e.g. 台北車站: make it the search centre
     if (looksLikePlace(text) && mapRef.current) {
       findPlace(mapRef.current, text, coords).then((found) => {
-        if (found) searchAt({ lat: found.lat, lng: found.lng }, found.name);
+        if (found) searchAt({ lat: found.lat, lng: found.lng }, found.name, { newPlace: true });
         else searchFor(text); // not a real place after all: treat it as something to look for
       });
       return;
@@ -422,7 +449,7 @@ const App = () => {
       <div className={classes.map}>
         <MapView
           onUserMove={() => !isDesktop && setHeaderCompact(true)}
-          onPickCenter={(point) => searchAt(point, '地圖上選的點')} // long-press / right-click
+          onPickCenter={(point) => searchAt(point, '地圖上選的點', { newPlace: true })} // long-press / right-click
           onMapClick={() => {
             // Tap anywhere off the markers: back to the map (place card closed, sheet lowered)
             setSelectedPlace(null);

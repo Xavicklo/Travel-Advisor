@@ -9,11 +9,13 @@ export default makeStyles((theme) => ({
   },
   typeRow: {
     display: 'flex',
-    gap: 8,
+    gap: 6,
   },
   typeChip: {
     flex: 1,
+    minWidth: 0,
     fontWeight: 600,
+    '& .MuiChip-label': { paddingLeft: 6, paddingRight: 8 },
   },
   keywordInput: {
     borderRadius: 20,

@@ -12,6 +12,7 @@ import { distanceKm } from '../utils/geo';
 
 // Our place types -> Google place types
 export const PLACE_TYPES = {
+  stores: 'convenience_store',
   restaurants: 'restaurant',
   hotels: 'lodging',
   attractions: 'tourist_attraction',
