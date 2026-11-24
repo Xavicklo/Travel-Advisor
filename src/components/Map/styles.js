@@ -267,12 +267,17 @@ export default makeStyles((theme) => ({
   weatherIcon: {
     fontSize: 28,
   },
+  // A slim vertical strip on the right edge (under the weather on desktop)
   labelToggle: {
     position: 'absolute',
-    top: 80,
+    top: 96,
     right: 16,
-    padding: 6,
+    padding: 4,
     borderRadius: 10,
+  },
+  cardPhoto: {
+    width: '100%',
+    cursor: 'pointer',
   },
   // Phones: a slim vertical strip on the right edge, out of the way of the map
   labelToggleMobile: {

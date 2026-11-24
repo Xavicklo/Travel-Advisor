@@ -18,6 +18,7 @@ import { getKind } from '../../utils/categories';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const MAX_ZOOM = 19;
+const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg';
 
 /** Round category icon, e.g. fork & knife for restaurants, bed for hotels. */
 const KindIcon = ({ kind, classes, size = 22 }) => {
@@ -28,6 +29,23 @@ const KindIcon = ({ kind, classes, size = 22 }) => {
     </span>
   );
 };
+
+/**
+ * The original big card with a photo, used only by the 全部 mode: every place gets one,
+ * with no collision handling. Kept on purpose to show (e.g. in a demo) why labels need
+ * layout rules: at a normal zoom the cards pile up on top of each other.
+ */
+const PhotoCard = ({ place, classes }) => (
+  <Paper elevation={3} className={classes.paper} style={{ borderTop: `3px solid ${getKind(place.kind).color}` }}>
+    <div className={classes.cardTitle}>
+      <KindIcon kind={place.kind} classes={classes} size={20} />
+      <Typography className={classes.typography} variant="subtitle2">{place.name}</Typography>
+    </div>
+    {/* loading="lazy": Places photos are billed per load */}
+    <img className={classes.cardPhoto} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} loading="lazy" />
+    <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
+  </Paper>
+);
 
 /** Hover preview on desktop: name and stars. No photo on the map (photos are billed per load). */
 const MarkerCard = ({ place, classes }) => (
@@ -72,9 +90,13 @@ const Map = ({
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
   // auto: icons, then ratings, then names as you zoom in (default) · icons: icons only · names: always names
+  // all: the original "every place is a photo card" view, no collision handling (for comparison)
   const [labelMode, setLabelMode] = useState('auto');
 
   const layout = useMemo(() => {
+    if (labelMode === 'all') {
+      return { cards: places.map((place, index) => ({ place, index })), dots: [], clusters: [], levels: {} };
+    }
     const result = layoutLabels(places, zoom, {
       selectedIndex: childClicked, // the clicked place always shows its full label
       maxCards: 0,
@@ -134,9 +156,15 @@ const Map = ({
       >
         {/* The selected place: always its full name and rating, highlighted */}
         {layout.cards.map(({ place, index }) => (
-          <div className={classes.labelContainer} style={{ zIndex: 6 }} lat={place.lat} lng={place.lng} key={`p-${index}`}>
-            <PlaceLabel place={place} level={2} classes={classes} selected />
-          </div>
+          labelMode === 'all' ? (
+            <div className={classes.markerContainer} lat={place.lat} lng={place.lng} key={`p-${index}`}>
+              <PhotoCard place={place} classes={classes} />
+            </div>
+          ) : (
+            <div className={classes.labelContainer} style={{ zIndex: 6 }} lat={place.lat} lng={place.lng} key={`p-${index}`}>
+              <PlaceLabel place={place} level={2} classes={classes} selected />
+            </div>
+          )
         ))}
 
         {layout.dots.map(({ place, index }) => {
@@ -251,7 +279,7 @@ const Map = ({
         <ToggleButtonGroup
           size="small"
           exclusive
-          orientation={isDesktop ? 'horizontal' : 'vertical'}
+          orientation="vertical"
           value={labelMode}
           onChange={(e, value) => value && setLabelMode(value)}
           aria-label="標籤顯示方式"
@@ -259,12 +287,8 @@ const Map = ({
           <ToggleButton value="auto" className={classes.modeButton} title="放大地圖會依序顯示評分、名稱">自動</ToggleButton>
           <ToggleButton value="icons" className={classes.modeButton}>圖示</ToggleButton>
           <ToggleButton value="names" className={classes.modeButton} title="盡量顯示名稱和評分">名稱</ToggleButton>
+          <ToggleButton value="all" className={classes.modeButton} title="每個地點都顯示照片卡片（不處理重疊）">全部</ToggleButton>
         </ToggleButtonGroup>
-        {isDesktop && (
-          <Typography variant="caption" color="textSecondary" component="div" className={classes.modeStats}>
-            {labelMode === 'auto' && zoom < 16 ? `放大到 ${zoom < 15 ? '15 級看評分' : '16 級看名稱'} · ` : ''}地點 {places.length} · 群集 {layout.clusters.length}
-          </Typography>
-        )}
       </Paper>
     </div>
   );
