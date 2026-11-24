@@ -104,13 +104,12 @@ export const looksLikePlace = (text) => {
  * marker (plain text in our own style, not the chains' logos).
  * @returns {string|null} '7' | '全' | '萊' | 'OK' | null
  */
-// One colour per chain so they're easy to tell apart. Our own palette, deliberately not
-// the chains' brand colours, and none of the category colours either.
+// One colour per chain so they're easy to tell apart (colours chosen by the project owner)
 export const CHAIN_COLORS = {
-  7: { bg: '#283593', fg: '#fff' }, // indigo
-  全: { bg: '#6d4c41', fg: '#fff' }, // brown
-  萊: { bg: '#f9a825', fg: '#3e2723' }, // amber, dark text for contrast
-  OK: { bg: '#455a64', fg: '#fff' }, // slate
+  7: { bg: '#1b9e4b', fg: '#fff' }, // green
+  全: { bg: '#29a9e1', fg: '#fff' }, // light blue
+  萊: { bg: '#ec5f9a', fg: '#fff' }, // pink
+  OK: { bg: '#e53935', fg: '#fff' }, // red
 };
 const CHAINS = [
   [/7-?eleven|7-?11|統一超商|小七/i, '7'],
