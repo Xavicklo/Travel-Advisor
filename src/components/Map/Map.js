@@ -143,8 +143,10 @@ const Map = ({
       cardWidth: 1,
       cardHeight: 1,
     });
-    return { ...result, levels: labelLevels(result.dots, result.clusters, zoom, labelMode) };
-  }, [places, zoom, labelMode, childClicked]);
+    // Phones, 自動: show name + rating wherever it fits, at any zoom (overlapping ones are shortened)
+    const mode = !isDesktop && labelMode === 'auto' ? 'names' : labelMode;
+    return { ...result, levels: labelLevels(result.dots, result.clusters, zoom, mode) };
+  }, [places, zoom, labelMode, childClicked, isDesktop]);
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
