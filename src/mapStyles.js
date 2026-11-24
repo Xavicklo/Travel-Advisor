@@ -1,4 +1,5 @@
-export default [
+// Custom Google Maps style (https://developers.google.com/maps/documentation/javascript/style-reference)
+const mapStyles = [
   {
     featureType: "administrative",
     elementType: "labels.text.fill",
@@ -78,3 +79,5 @@ export default [
     ],
   },
 ];
+
+export default mapStyles;
