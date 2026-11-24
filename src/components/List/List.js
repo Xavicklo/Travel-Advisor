@@ -236,7 +236,12 @@ const List = ({
               評分 <strong>{RATING_STEPS[ratingIndex] ? `${RATING_STEPS[ratingIndex]}★+` : '不限'}</strong>
             </ButtonBase>
           </div>
-          <div className={classes.sliders} role="tabpanel">
+          {/* Square top corner under the active tab, so tab and panel read as one shape */}
+          <div
+            className={classes.sliders}
+            role="tabpanel"
+            style={{ borderTopLeftRadius: sliderTab === 'radius' ? 0 : 14, borderTopRightRadius: sliderTab === 'rating' ? 0 : 14 }}
+          >
             {sliderTab === 'radius' ? (
               <Slider
                 value={radiusIndex}

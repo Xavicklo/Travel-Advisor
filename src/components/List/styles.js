@@ -43,16 +43,15 @@ export default makeStyles((theme) => ({
   filterTabs: {
     marginTop: theme.spacing(0.5),
   },
+  // Two equal halves across the full width, like the user's sketch
   tabStrip: {
     display: 'flex',
-    gap: 2,
-    paddingLeft: 14, // clear the panel's rounded corner so the tab curves sit on a straight edge
   },
   filterTab: {
-    position: 'relative',
+    flex: 1,
     gap: 4,
-    padding: '7px 14px 6px',
-    borderRadius: '10px 10px 0 0',
+    padding: '8px 6px 7px',
+    borderRadius: '12px 12px 0 0',
     fontSize: 13,
     color: theme.palette.text.secondary,
     background: 'transparent',
@@ -65,30 +64,19 @@ export default makeStyles((theme) => ({
     color: theme.palette.text.primary,
     fontWeight: 600,
     '&:hover': { background: '#e4e9f0' },
-    // the little outward curves at the tab's bottom corners
-    '&::before, &::after': {
-      content: '""',
-      position: 'absolute',
-      bottom: 0,
-      width: 10,
-      height: 10,
-      background: 'transparent',
-    },
-    '&::before': { left: -10, borderBottomRightRadius: 10, boxShadow: '4px 4px 0 4px #e4e9f0' },
-    '&::after': { right: -10, borderBottomLeftRadius: 10, boxShadow: '-4px 4px 0 4px #e4e9f0' },
   },
   filterTabIcon: {
     fontSize: 16,
   },
   sliders: {
-    padding: theme.spacing(0.5, 3, 0),
+    padding: theme.spacing(0, 3),
     borderRadius: 14,
     background: '#e4e9f0', // soft grey so the raised knobs and sunken tracks read as 3D
   },
   // Soft 3D (neumorphic) slider: a sunken pill track and a big raised round knob
   slider: {
     height: 16,
-    padding: '14px 0 22px',
+    padding: '16px 0 26px',
     color: '#5b7392', // filled part: slate blue
     '& .MuiSlider-rail': {
       height: 16,
