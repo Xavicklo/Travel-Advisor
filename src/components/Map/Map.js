@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { Paper, Typography, useMediaQuery } from '@material-ui/core';
+import { Paper, Typography, useMediaQuery, Button } from '@material-ui/core';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Rating from '@material-ui/lab/Rating';
 import RoomIcon from '@material-ui/icons/Room';
+import SearchIcon from '@material-ui/icons/Search';
 
 import useStyles from './styles';
 import mapStyles from '../../mapStyles';
@@ -35,14 +36,16 @@ const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
         {place.name}
       </Typography>
     </div>
-    <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} />
+    {/* loading="lazy": Places photos are billed per load, so only load the ones actually shown */}
+    <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} loading="lazy" />
     <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
     {hiddenCount > 0 && <span className={classes.nearby}>附近還有 {hiddenCount} 個</span>}
   </Paper>
 );
 
 const Map = ({
-  coords, zoom, places, setCoords, setZoom, setBounds, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
+  coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
+  searchCenter, showSearchHere, onSearchHere,
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
@@ -100,10 +103,9 @@ const Map = ({
         margin={[50, 50, 50, 50]}
         options={{ disableDefaultUI: true, zoomControl: true, styles: mapStyles, maxZoom: MAX_ZOOM }}
         onChange={(e) => {
+          // Just track where the map is; searching happens only on purpose (see App.js)
           setCoords({ lat: e.center.lat, lng: e.center.lng });
           setZoom(e.zoom);
-          // marginBounds = visible area minus the margin above, so markers aren't cut off at the edges.
-          setBounds({ ne: e.marginBounds.ne, sw: e.marginBounds.sw });
         }}
         onChildClick={handleChildClick}
       >
@@ -130,6 +132,14 @@ const Map = ({
             )}
           </div>
         ))}
+
+        {/* Search centre: distances are measured from here. It stays put when the map is dragged. */}
+        {searchCenter && (
+          <div className={classes.centerMarker} lat={searchCenter.lat} lng={searchCenter.lng} key="search-center">
+            <span className={classes.centerLabel}>搜尋中心</span>
+            <RoomIcon className={classes.centerPin} />
+          </div>
+        )}
 
         {/* The user's GPS position: a pulsing blue dot, like in Google Maps */}
         {userLocation && (
@@ -170,11 +180,12 @@ const Map = ({
         })}
       </GoogleMapReact>
 
-      {/* Search centre: always the middle of the map, where distances are measured from */}
-      <div className={classes.centerMarker} aria-hidden="true">
-        <span className={classes.centerLabel}>搜尋中心</span>
-        <RoomIcon className={classes.centerPin} />
-      </div>
+      {/* Like Google Maps: moving the map doesn't search until the user asks */}
+      {showSearchHere && (
+        <Button variant="contained" color="primary" startIcon={<SearchIcon />} className={classes.searchHere} onClick={onSearchHere}>
+          搜尋這個區域
+        </Button>
+      )}
 
       {weatherInfo && (
         <Paper elevation={3} className={classes.weather} aria-label="地圖中心的天氣">

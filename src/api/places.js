@@ -49,16 +49,17 @@ export const normalizePlace = (result, category = 'restaurants', center = null) 
 };
 
 /**
- * Nearby Search in a circle. The first page resolves the promise straight away;
- * later pages (up to MAX_PAGES) are delivered through `onMore` as they arrive.
+ * Nearby Search in a circle. Returns only the first page (20 places) plus a
+ * `loadMore` function for the next page (null when there are no more), so extra
+ * billed requests happen only when the user asks for more results.
  *
  * @param {google.maps.Map} map - needed by PlacesService (it renders attributions there)
  * @param {string} type - restaurants | hotels | attractions
  * @param {{center: {lat, lng}, radiusKm: number}} area
  * @param {string} [keyword] - e.g. "火鍋": only places matching it
- * @param {{onMore?: Function, isCancelled?: Function}} [options]
+ * @returns {Promise<{places: Array, loadMore: (() => Promise) | null}>}
  */
-export const getPlacesData = (map, type, area, keyword = '', { onMore, isCancelled = () => false } = {}) => {
+export const getPlacesData = (map, type, area, keyword = '') => {
   const { maps } = window.google;
   const service = new maps.places.PlacesService(map);
 
@@ -75,24 +76,35 @@ export const getPlacesData = (map, type, area, keyword = '', { onMore, isCancell
     .map((r) => normalizePlace(r, type, area.center))
     .filter((p) => p.distanceKm <= area.radiusKm * 1.05); // Google sometimes returns places just outside
 
+  // PlacesService calls the same callback for every page, so route each call to
+  // whichever promise is currently waiting for a page.
+  let waiting = null;
+  let page = 0;
+
+  const makeLoadMore = (pagination, receivedAt) => {
+    if (!pagination?.hasNextPage || page >= MAX_PAGES) return null;
+    return () => new Promise((resolve, reject) => {
+      waiting = { resolve, reject };
+      // Google's next-page token only becomes valid ~2 s after the previous page arrived.
+      const wait = Math.max(0, 2000 - (Date.now() - receivedAt));
+      setTimeout(() => pagination.nextPage(), wait);
+    });
+  };
+
   return new Promise((resolve, reject) => {
-    let page = 0;
+    waiting = { resolve, reject };
     service.nearbySearch(request, (results, status, pagination) => {
-      if (isCancelled()) return;
+      const current = waiting;
+      waiting = null;
+      if (!current) return;
       page += 1;
       const { OK, ZERO_RESULTS } = maps.places.PlacesServiceStatus;
-
       if (status === OK) {
-        const places = toPlaces(results);
-        if (page === 1) resolve(places);
-        else if (onMore) onMore(places);
-        // The next-page token takes a moment to become valid, so wait before asking for it.
-        if (pagination?.hasNextPage && page < MAX_PAGES && onMore) {
-          setTimeout(() => !isCancelled() && pagination.nextPage(), 2000);
-        }
-      } else if (page === 1) {
-        if (status === ZERO_RESULTS) resolve([]);
-        else reject(new Error(STATUS_MESSAGES[status] || `無法載入地點（${status}）。`));
+        current.resolve({ places: toPlaces(results), loadMore: makeLoadMore(pagination, Date.now()) });
+      } else if (status === ZERO_RESULTS) {
+        current.resolve({ places: [], loadMore: null });
+      } else {
+        current.reject(new Error(STATUS_MESSAGES[status] || `無法載入地點（${status}）。`));
       }
     });
   });

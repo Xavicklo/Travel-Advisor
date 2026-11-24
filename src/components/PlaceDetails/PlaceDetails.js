@@ -60,7 +60,15 @@ const PlaceDetails = ({ place, selected, refProp, loadDetails, isFavorite = fals
 
   return (
     <Card elevation={6} className={`${classes.card} ${selected ? classes.selected : ''}`}>
-      <CardMedia style={{ height: 220 }} image={place.photoUrl || PLACEHOLDER_IMAGE} title={place.name} />
+      {/* A real <img loading="lazy">: Places photos are billed per load, so only load ones scrolled into view */}
+      <CardMedia
+        component="img"
+        height="220"
+        loading="lazy"
+        image={place.photoUrl || PLACEHOLDER_IMAGE}
+        alt={place.name}
+        style={{ objectFit: 'cover' }}
+      />
       {onToggleFavorite && (
         <IconButton
           className={classes.favButton}

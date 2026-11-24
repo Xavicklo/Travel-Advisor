@@ -150,11 +150,9 @@ export default makeStyles((theme) => ({
     fontWeight: 600,
   },
 
-  // Fixed pin at the centre of the map: the tip of the pin marks the exact centre
+  // Pin at the search centre: the tip of the pin marks the exact point
   centerMarker: {
     position: 'absolute',
-    left: '50%',
-    top: '50%',
     transform: 'translate(-50%, -100%)',
     display: 'flex',
     flexDirection: 'column',
@@ -208,6 +206,23 @@ export default makeStyles((theme) => ({
     '100%': { transform: 'scale(3.5)', opacity: 0 },
   },
 
+  searchHere: {
+    position: 'absolute',
+    top: 12,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 6,
+    borderRadius: 20,
+    padding: '6px 18px',
+    fontWeight: 700,
+    background: 'linear-gradient(to right, #1cb5e0, #000046)',
+    boxShadow: '0 4px 14px rgba(0,0,70,0.35)',
+    animation: '$dropIn 0.25s ease-out',
+  },
+  '@keyframes dropIn': {
+    '0%': { opacity: 0, transform: 'translate(-50%, -8px)' },
+    '100%': { opacity: 1, transform: 'translate(-50%, 0)' },
+  },
   weather: {
     position: 'absolute',
     top: 12,

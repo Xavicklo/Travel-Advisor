@@ -12,7 +12,6 @@ import {
   IconButton,
   Chip,
   Slider,
-  LinearProgress,
   Button,
   Tabs,
   Tab,
@@ -45,6 +44,8 @@ const List = ({
   childClicked,
   isLoading,
   isLoadingMore,
+  hasMore,
+  onLoadMore,
   error,
   loadDetails,
   nearest,
@@ -297,7 +298,7 @@ const List = ({
               </FormControl>
             </div>
           )}
-          {!error && isLoadingMore && places.length > 0 && <LinearProgress className={classes.more} />}
+
           <Grid container spacing={3} className={classes.list}>
             {places.map((place, i) => (
               <Grid ref={elRefs[i]} key={place.id} item xs={12}>
@@ -311,6 +312,21 @@ const List = ({
                 />
               </Grid>
             ))}
+            {/* Next page only on request: each page is a billed Places API call */}
+            {!error && hasMore && (
+              <Grid item xs={12}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  onClick={onLoadMore}
+                  disabled={isLoadingMore}
+                  startIcon={isLoadingMore ? <CircularProgress size={16} /> : null}
+                >
+                  {isLoadingMore ? '載入中…' : '載入更多結果'}
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </>
       ))}

@@ -10,7 +10,7 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - **Area-based search:** pan or zoom the map, and the places shown in the visible area reload automatically
 - Search any city or place with **Google Places Autocomplete**
 - Filter by type (restaurants, hotels, attractions) and minimum rating
-- **Distance slider (1–50 km):** searches a circle around the map centre, draws the circle on the map and zooms to fit it. Fetches up to 3 pages (60 places).
+- **Distance slider (1–50 km):** searches a circle around the search centre, draws the circle on the map and zooms to fit it. 20 results first; 載入更多 fetches up to 60.
 - **Search centre pin** fixed at the middle of the map (distances are measured from here) and a **"以我的位置搜尋"** button that moves the search to your GPS position, shown as a pulsing blue dot
 - **No results? Nearest match:** if nothing matches inside the circle, a Text Search finds the closest match (e.g. the nearest 陶板屋) and offers "擴大範圍到 N 公里"
 - **Recent searches and favourites** saved in the browser (localStorage): one click re-runs "麻辣鍋 · 3 公里 · 我的位置", and the ♥ on a card saves the place to the 我的收藏 tab. No account or database needed.
@@ -23,6 +23,20 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 - One-click **directions in Google Maps**
 - Live weather for the centre of the map (Open-Meteo, no key needed)
 - Responsive layout: on phones the list stacks above the map and markers shrink to icons
+
+## Keeping API usage (and cost) low
+
+Nearby Search, Place Details and Place Photos are all billed per request, so the app avoids requests it doesn't need:
+
+| Technique | Where | Effect |
+| --- | --- | --- |
+| **No search on drag** | `App.js` (`coords` vs `searchCenter`) | Moving the map only shows a **搜尋這個區域** button; nothing is fetched until it's clicked, like Google Maps |
+| **In-memory cache (10 min)** | `App.js` (`cacheRef`) | Same type + keyword + radius + centre (~100 m) reuses the earlier results with no API call |
+| **Pages on demand** | `api/places.js` (`loadMore`) | Only the first 20 results are fetched; pages 2–3 load when the user clicks **載入更多結果** |
+| **Debounce** | `App.js` | Dragging the radius slider triggers one request, not dozens |
+| **Lazy photos** | `<img loading="lazy">` | Photos (billed per load) only load when scrolled into view or hovered |
+| **Details on click** | `PlaceDetails.js` | Reviews, phone and website are requested only when a card is opened, and only those `fields` |
+| **Wait for location** | `App.js` (`geoReady`) | No throw-away search at the default location before GPS answers |
 
 ## Smart labels: how marker collisions are handled
 
