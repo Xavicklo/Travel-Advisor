@@ -35,7 +35,8 @@ const App = () => {
   const classes = useStyles();
   const isDesktop = useMediaQuery('(min-width:900px)');
   const [panelOpen, setPanelOpen] = useState(true); // desktop side panel
-  const [sheetSnap, setSheetSnap] = useState('peek'); // phone bottom sheet: peek | half | full; closed by default
+  const [sheetSnap, setSheetSnap] = useState('peek');
+  const [headerCompact, setHeaderCompact] = useState(false); // phones: logo tucked away while panning // phone bottom sheet: peek | half | full; closed by default
   // Show results: open the desktop panel, or pull the phone sheet up to half if it's closed
   const openPanel = useCallback(() => {
     setPanelOpen(true);
@@ -330,6 +331,9 @@ const App = () => {
       onPlaceChanged={onPlaceChanged}
       onLoad={onLoad}
       mapsLoaded={mapsLoaded}
+      glass={!isDesktop}
+      compact={!isDesktop && headerCompact}
+      onExpand={() => setHeaderCompact(false)}
       actions={isDesktop && (
         <IconButton
           size="small"
@@ -388,6 +392,7 @@ const App = () => {
       {/* The map fills the whole screen; everything else floats on top of it */}
       <div className={classes.map}>
         <MapView
+          onUserMove={() => !isDesktop && setHeaderCompact(true)}
           setChildClicked={(index) => index != null && visiblePlaces[index] && selectPlace(visiblePlaces[index])}
           setCoords={setCoords}
           coords={coords}

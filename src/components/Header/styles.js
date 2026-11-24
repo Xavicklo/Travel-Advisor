@@ -27,10 +27,40 @@ export default makeStyles((theme) => ({
     flexDirection: 'column',
     gap: theme.spacing(1.5),
   },
+  // Frosted glass: the map shows through, blurred, so the bar feels lighter
+  glass: {
+    background: 'linear-gradient(120deg, rgba(28, 181, 224, 0.55) 0%, rgba(0, 0, 70, 0.62) 100%)',
+    backdropFilter: 'blur(14px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(160%)', // Safari
+  },
   brandRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    maxHeight: 60,
+    overflow: 'hidden',
+    transition: 'max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease',
+  },
+  // While the map is being panned: only the search box stays, the logo slides away
+  compact: {
+    paddingTop: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+    '& $brandRow': { maxHeight: 0, opacity: 0, marginBottom: -12 },
+  },
+  byline: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+  },
+  // Small signature, like an artist's mark in the corner
+  signature: {
+    fontFamily: '"Poppins", "Roboto", sans-serif',
+    fontSize: 11,
+    fontStyle: 'italic',
+    fontWeight: 500,
+    letterSpacing: 0.5,
+    opacity: 0.6,
+    whiteSpace: 'nowrap',
   },
   // ---- Wordmark ----
   brand: {

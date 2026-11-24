@@ -10,7 +10,11 @@ import useStyles from './styles';
 const AUTOCOMPLETE_OPTIONS = { fields: ['geometry', 'name'] };
 
 // `actions`: extra buttons shown on the brand row (e.g. collapse the panel)
-const Header = ({ onPlaceChanged, onLoad, mapsLoaded, actions = null }) => {
+// `glass`: see-through frosted background (phones, floating over the map)
+// `compact`: brand row tucked away while the user pans the map; `onExpand` brings it back
+const Header = ({
+  onPlaceChanged, onLoad, mapsLoaded, actions = null, glass = false, compact = false, onExpand,
+}) => {
   const classes = useStyles();
 
   const searchBox = (
@@ -30,7 +34,11 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded, actions = null }) => {
 
   // Compact header that sits on top of the side panel, like the search box in Google Maps
   return (
-    <header className={classes.bar}>
+    <header
+      className={`${classes.bar} ${glass ? classes.glass : ''} ${compact ? classes.compact : ''}`}
+      onClick={compact ? onExpand : undefined}
+      onFocus={onExpand}
+    >
       <div className={classes.brandRow}>
         {/* Wordmark: compass badge + two-weight "Travel Advisor" */}
         <a href="/" className={classes.brand} aria-label="Travel Advisor 首頁">
@@ -42,7 +50,10 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded, actions = null }) => {
             <span className={classes.wordLight}>Advisor</span>
           </span>
         </a>
-        {actions}
+        <span className={classes.byline}>
+          <span className={classes.signature}>by Xavick</span>
+          {actions}
+        </span>
       </div>
       {/* Autocomplete needs google.maps.places, so render it only after the map script has loaded */}
       {mapsLoaded ? (

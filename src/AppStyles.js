@@ -47,6 +47,7 @@ export default makeStyles((theme) => ({
     zIndex: 10,
     borderRadius: 14,
     overflow: 'hidden',
+    background: 'transparent', // the header itself is frosted glass
   },
   collapseButton: {
     color: '#fff',

@@ -87,7 +87,7 @@ const PlaceLabel = ({ place, level, classes, selected = false }) => {
 
 const Map = ({
   coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
-  searchCenter, showSearchHere, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
+  searchCenter, showSearchHere, onUserMove, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
@@ -170,6 +170,7 @@ const Map = ({
           setZoom(e.zoom);
         }}
         onChildClick={handleChildClick}
+        onDrag={() => onUserMove && onUserMove()} // phones: tuck the logo away for more map
       >
         {/* The selected place: always its full name and rating, highlighted */}
         {layout.cards.map(({ place, index }) => (
