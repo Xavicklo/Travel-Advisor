@@ -13,11 +13,10 @@ import SearchIcon from '@material-ui/icons/Search';
 import useStyles from './styles';
 import mapStyles from '../../mapStyles';
 import { describeWeather } from '../../api/weather';
-import { layoutLabels } from '../../utils/labelLayout';
+import { layoutLabels, labelLevels, shortName } from '../../utils/labelLayout';
 import { getKind } from '../../utils/categories';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg';
 const MAX_ZOOM = 19;
 
 /** Round category icon, e.g. fork & knife for restaurants, bed for hotels. */
@@ -30,8 +29,8 @@ const KindIcon = ({ kind, classes, size = 22 }) => {
   );
 };
 
-/** The full marker card: category icon, name, photo, rating. */
-const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
+/** Hover preview on desktop: name and stars. No photo on the map (photos are billed per load). */
+const MarkerCard = ({ place, classes }) => (
   <Paper elevation={3} className={classes.paper} style={{ borderTop: `3px solid ${getKind(place.kind).color}` }}>
     <div className={classes.cardTitle}>
       <KindIcon kind={place.kind} classes={classes} size={20} />
@@ -39,12 +38,32 @@ const MarkerCard = ({ place, classes, hiddenCount = 0 }) => (
         {place.name}
       </Typography>
     </div>
-    {/* loading="lazy": Places photos are billed per load, so only load the ones actually shown */}
-    <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} loading="lazy" />
     <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
-    {hiddenCount > 0 && <span className={classes.nearby}>附近還有 {hiddenCount} 個</span>}
   </Paper>
 );
+
+/**
+ * A marker that grows with the zoom: level 0 icon · 1 icon + ★4.5 · 2 icon + ★4.5 + name.
+ * The icon stays exactly on the place; the text extends to the right.
+ */
+const PlaceLabel = ({ place, level, classes, selected = false }) => {
+  if (level === 0 && !selected) {
+    return (
+      <div className={classes.dot}>
+        <KindIcon kind={place.kind} classes={classes} size={24} />
+      </div>
+    );
+  }
+  return (
+    <div className={`${classes.label} ${selected ? classes.labelSelected : ''}`}>
+      <KindIcon kind={place.kind} classes={classes} size={24} />
+      {(level >= 1 || selected) && place.rating != null && (
+        <span className={classes.labelRating}>★{place.rating.toFixed(1)}</span>
+      )}
+      {(level >= 2 || selected) && <span className={classes.labelName}>{selected ? place.name : shortName(place.name)}</span>}
+    </div>
+  );
+};
 
 const Map = ({
   coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
@@ -52,17 +71,17 @@ const Map = ({
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
-  // icons: every place is a small icon (default) · smart: collision-aware cards · all: every place is a card
-  const [labelMode, setLabelMode] = useState('icons');
+  // auto: icons, then ratings, then names as you zoom in (default) · icons: icons only · names: always names
+  const [labelMode, setLabelMode] = useState('auto');
 
   const layout = useMemo(() => {
-    if (labelMode === 'all') {
-      return { cards: places.map((place, index) => ({ place, index, hiddenCount: 0 })), dots: [], clusters: [] };
-    }
-    return layoutLabels(places, zoom, {
-      selectedIndex: childClicked, // the clicked place still opens as a card
-      maxCards: labelMode === 'icons' ? 0 : 8,
+    const result = layoutLabels(places, zoom, {
+      selectedIndex: childClicked, // the clicked place always shows its full label
+      maxCards: 0,
+      cardWidth: 1,
+      cardHeight: 1,
     });
+    return { ...result, levels: labelLevels(result.dots, result.clusters, zoom, labelMode) };
   }, [places, zoom, labelMode, childClicked]);
 
   if (!GOOGLE_MAPS_API_KEY) {
@@ -113,29 +132,33 @@ const Map = ({
         }}
         onChildClick={handleChildClick}
       >
-        {layout.cards.map(({ place, index, hiddenCount }) => (
-          <div className={classes.markerContainer} lat={place.lat} lng={place.lng} key={`p-${index}`}>
-            {isDesktop ? (
-              <MarkerCard place={place} classes={classes} hiddenCount={hiddenCount} />
-            ) : (
-              <KindIcon kind={place.kind} classes={classes} size={30} />
-            )}
+        {/* The selected place: always its full name and rating, highlighted */}
+        {layout.cards.map(({ place, index }) => (
+          <div className={classes.labelContainer} style={{ zIndex: 6 }} lat={place.lat} lng={place.lng} key={`p-${index}`}>
+            <PlaceLabel place={place} level={2} classes={classes} selected />
           </div>
         ))}
 
-        {layout.dots.map(({ place, index }) => (
-          <div className={classes.dotContainer} lat={place.lat} lng={place.lng} key={`p-${index}`}>
-            {/* Compact marker: just the category icon; name, photo and rating appear on hover */}
-            <div className={classes.dot}>
-              <KindIcon kind={place.kind} classes={classes} size={24} />
+        {layout.dots.map(({ place, index }) => {
+          const level = layout.levels[index] || 0;
+          return (
+            <div
+              className={level ? classes.labelContainer : classes.dotContainer}
+              lat={place.lat}
+              lng={place.lng}
+              key={`p-${index}`}
+              onClick={() => setChildClicked(index)} // the label text is clickable too, not just the icon
+            >
+              <PlaceLabel place={place} level={level} classes={classes} />
+              {/* Desktop: hovering a bare icon shows its name and stars */}
+              {isDesktop && level < 2 && (
+                <div className={classes.preview}>
+                  <MarkerCard place={place} classes={classes} />
+                </div>
+              )}
             </div>
-            {isDesktop && (
-              <div className={classes.preview}>
-                <MarkerCard place={place} classes={classes} />
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
 
         {/* Search centre: distances are measured from here. It stays put when the map is dragged. */}
         {searchCenter && (
@@ -233,13 +256,13 @@ const Map = ({
           onChange={(e, value) => value && setLabelMode(value)}
           aria-label="標籤顯示方式"
         >
+          <ToggleButton value="auto" className={classes.modeButton} title="放大地圖會依序顯示評分、名稱">自動</ToggleButton>
           <ToggleButton value="icons" className={classes.modeButton}>圖示</ToggleButton>
-          <ToggleButton value="smart" className={classes.modeButton}>智慧卡片</ToggleButton>
-          <ToggleButton value="all" className={classes.modeButton}>全部卡片</ToggleButton>
+          <ToggleButton value="names" className={classes.modeButton} title="盡量顯示名稱和評分">名稱</ToggleButton>
         </ToggleButtonGroup>
         {isDesktop && (
           <Typography variant="caption" color="textSecondary" component="div" className={classes.modeStats}>
-            卡片 {layout.cards.length} · 圖示 {layout.dots.length} · 群集 {layout.clusters.length}
+            {labelMode === 'auto' && zoom < 16 ? `放大到 ${zoom < 15 ? '15 級看評分' : '16 級看名稱'} · ` : ''}地點 {places.length} · 群集 {layout.clusters.length}
           </Typography>
         )}
       </Paper>

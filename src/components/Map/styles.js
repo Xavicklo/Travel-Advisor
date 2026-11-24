@@ -20,15 +20,41 @@ export default makeStyles((theme) => ({
   markerContainer: {
     position: 'absolute', transform: 'translate(-50%, -50%)', zIndex: 1, '&:hover': { zIndex: 3 },
   },
-  pointer: {
-    cursor: 'pointer',
-    width: '100%',
+  // Zoom-responsive label: icon on the place, rating and name to its right
+  labelContainer: {
+    position: 'absolute',
+    transform: 'translate(-14px, -50%)', // keep the icon centred on the place
+    zIndex: 3,
+    '&:hover': { zIndex: 7 },
+    '&:hover $preview': { display: 'block' },
   },
-  nearby: {
-    marginTop: 4,
-    fontSize: 11,
-    color: theme.palette.primary.main,
+  label: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    padding: '2px 8px 2px 2px',
+    borderRadius: 16,
+    background: '#fff',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+    fontSize: 12,
+    lineHeight: 1,
+    transition: 'transform 0.15s ease',
+    '&:hover': { transform: 'scale(1.06)' },
+  },
+  labelSelected: {
+    padding: '3px 10px 3px 3px',
+    fontSize: 13,
+    boxShadow: `0 0 0 2px ${theme.palette.primary.main}, 0 3px 10px rgba(0,0,0,0.35)`,
+  },
+  labelRating: {
+    color: '#e37400', // Google Maps' rating orange
+    fontWeight: 700,
+  },
+  labelName: {
     fontWeight: 600,
+    color: theme.palette.text.primary,
   },
 
   // Small marker for places that didn't get a card; shows the card on hover

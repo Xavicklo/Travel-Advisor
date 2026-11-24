@@ -6,7 +6,7 @@ export default makeStyles((theme) => ({
   },
   navButton: {
     position: 'absolute',
-    top: 10,
+    top: 66, // under the favourite heart
     right: 10,
     color: '#fff',
     background: '#1a73e8', // Google Maps directions blue
@@ -16,7 +16,7 @@ export default makeStyles((theme) => ({
   },
   favButton: {
     position: 'absolute',
-    top: 66, // under the directions button
+    top: 10,
     right: 10,
     background: 'rgba(255,255,255,0.92)',
     boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
