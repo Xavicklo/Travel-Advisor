@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CssBaseline, Grid } from '@material-ui/core';
 
-import { getPlacesData, getWeatherData } from './api/travelAdvisorAPI';
+import { getPlacesData } from './api/places';
+import { getWeatherData } from './api/weather';
 import Header from './components/Header/Header';
 import List from './components/List/List';
 import Map from './components/Map/Map';
@@ -21,6 +22,7 @@ const App = () => {
   const [error, setError] = useState('');
 
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const mapRef = useRef(null); // google.maps.Map instance, needed by PlacesService
   const [autocomplete, setAutocomplete] = useState(null);
   const [childClicked, setChildClicked] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,28 +45,35 @@ const App = () => {
 
   // Reload places whenever the visible map area or the place type changes.
   useEffect(() => {
-    if (!bounds) return undefined;
+    if (!bounds || !mapsLoaded) return undefined;
 
-    // Cancel the previous request so a slow, outdated response can't overwrite a newer one.
-    const controller = new AbortController();
-    setIsLoading(true);
-    setError('');
+    // Debounce: wait until the user stops panning/zooming before calling the (billed) Places API.
+    // `cancelled` ignores a slow, outdated response so it can't overwrite a newer one.
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setIsLoading(true);
+      setError('');
+      getPlacesData(mapRef.current, type, bounds)
+        .then((data) => {
+          if (cancelled) return;
+          setPlaces(data.filter((place) => place.reviews > 0));
+          setChildClicked(null);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setPlaces([]);
+          setError(err.message);
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoading(false);
+        });
+    }, 500);
 
-    getPlacesData(type, bounds.sw, bounds.ne, { signal: controller.signal })
-      .then((data) => {
-        setPlaces(data.filter((place) => place.name && place.num_reviews > 0));
-        setChildClicked(null);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        setPlaces([]);
-        setError(err.message);
-        setIsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [bounds, type]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [bounds, type, mapsLoaded]);
 
   // Weather for the centre of the map.
   useEffect(() => {
@@ -106,7 +115,10 @@ const App = () => {
             coords={coords}
             places={filteredPlaces}
             weather={weather}
-            onMapsLoaded={() => setMapsLoaded(true)}
+            onMapsLoaded={(map) => {
+              mapRef.current = map;
+              setMapsLoaded(true);
+            }}
           />
         </Grid>
       </Grid>

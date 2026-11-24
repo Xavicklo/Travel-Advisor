@@ -21,9 +21,10 @@ Built with **React 17**, **Material-UI** and the **Google Maps Platform**.
 | --- | --- | --- |
 | **Maps JavaScript API** | `components/Map/Map.js` (via `google-map-react`) | Renders the map and applies the custom style JSON in `mapStyles.js`. The `onChange` event returns the visible bounds (north-east and south-west corners), and the app uses these to query places inside that box. |
 | **Places API: Autocomplete** | `components/Header/Header.js` (via `@react-google-maps/api`) | Suggests places as you type. The chosen place's `geometry.location` re-centres the map. Only the `geometry` and `name` fields are requested, to keep Places API cost down. |
+| **Places API: Nearby Search** | `api/places.js` (`PlacesService.nearbySearch`) | Finds restaurants (`restaurant`), hotels (`lodging`) or attractions (`tourist_attraction`) inside the current map bounds, with rating, review count, price level, address and photo. Requests are debounced by 500 ms while the map moves. |
 | **Maps URLs** | `components/PlaceDetails/PlaceDetails.js` | The "Directions" button opens Google Maps navigation. It needs no API key and is not billed. |
 
-The place listings themselves come from the **Travel Advisor API on RapidAPI**, not from Google Places.
+> Earlier versions used the Travel Advisor API on RapidAPI. That endpoint (`list-in-boundary`) was retired, so place data now comes from Google Places as well. The whole app runs on one Google Maps Platform key.
 
 ## Getting started
 
@@ -35,11 +36,10 @@ npm install
 npm start                # http://localhost:3000
 ```
 
-### API keys
+### API key
 
 | Variable | Where to get it |
 | --- | --- |
 | `REACT_APP_GOOGLE_MAPS_API_KEY` | [Google Cloud Console](https://console.cloud.google.com/google/maps-apis). Enable **Maps JavaScript API** and **Places API**, and restrict the key to your HTTP referrers. |
-| `REACT_APP_RAPIDAPI_KEY` | [RapidAPI: Travel Advisor](https://rapidapi.com/apidojo/api/travel-advisor). Subscribe to the free plan. |
 
 > Keys in a front-end app are always visible to the browser, so **referrer restrictions** on the Google key are what protect it. The `.env` file only keeps keys out of git.

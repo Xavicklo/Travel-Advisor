@@ -80,7 +80,7 @@ const List = ({
           )}
           <Grid container spacing={3} className={classes.list}>
             {places?.map((place, i) => (
-              <Grid ref={elRefs[i]} key={place.location_id || i} item xs={12}>
+              <Grid ref={elRefs[i]} key={place.id} item xs={12}>
                 <PlaceDetails
                   selected={childClicked === i}
                   refProp={elRefs[i]}

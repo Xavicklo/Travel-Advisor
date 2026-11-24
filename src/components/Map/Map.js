@@ -6,7 +6,7 @@ import Rating from '@material-ui/lab/Rating';
 
 import useStyles from './styles';
 import mapStyles from '../../mapStyles';
-import { describeWeather } from '../../api/travelAdvisorAPI';
+import { describeWeather } from '../../api/weather';
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const PLACEHOLDER_IMAGE = 'https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg';
@@ -33,7 +33,7 @@ const Map = ({ coords, places, setCoords, setBounds, setChildClicked, weather, o
         // One loader for the whole app: the Maps JavaScript API plus the Places library (used by Autocomplete).
         bootstrapURLKeys={{ key: GOOGLE_MAPS_API_KEY, libraries: ['places'] }}
         yesIWantToUseGoogleMapApiInternals
-        onGoogleApiLoaded={() => onMapsLoaded()}
+        onGoogleApiLoaded={({ map }) => onMapsLoaded(map)}
         defaultCenter={coords}
         center={coords}
         defaultZoom={14}
@@ -49,8 +49,8 @@ const Map = ({ coords, places, setCoords, setBounds, setChildClicked, weather, o
         {places.map((place, i) => (
           <div
             className={classes.markerContainer}
-            lat={Number(place.latitude)}
-            lng={Number(place.longitude)}
+            lat={place.lat}
+            lng={place.lng}
             // google-map-react passes this key to onChildClick, and the list uses it as the index
             key={i}
           >
@@ -59,12 +59,8 @@ const Map = ({ coords, places, setCoords, setBounds, setChildClicked, weather, o
                 <Typography className={classes.typography} variant="subtitle2" gutterBottom>
                   {place.name}
                 </Typography>
-                <img
-                  className={classes.pointer}
-                  src={place.photo ? place.photo.images.large.url : PLACEHOLDER_IMAGE}
-                  alt={place.name}
-                />
-                <Rating name="read-only" size="small" value={Number(place.rating)} readOnly />
+                <img className={classes.pointer} src={place.photoUrl || PLACEHOLDER_IMAGE} alt={place.name} />
+                <Rating name="read-only" size="small" value={place.rating || 0} precision={0.5} readOnly />
               </Paper>
             ) : (
               <LocationOnOutlinedIcon color="primary" fontSize="large" />
