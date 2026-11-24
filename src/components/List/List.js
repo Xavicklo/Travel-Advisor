@@ -31,7 +31,7 @@ import { QUICK_KEYWORDS, KEYWORD_PLACEHOLDER } from '../../utils/categories';
 import {
   RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
 } from '../../utils/radius';
-import { RATING_STEPS, formatRating, indexForRating } from '../../utils/rating';
+import { RATING_STEPS, indexForRating } from '../../utils/rating';
 import useStyles from './styles';
 
 // Smallest radius step that reaches the nearest match (and is bigger than the current one).
@@ -51,7 +51,7 @@ const RATING_MARKS = [
 function RadiusThumb(props) {
   return (
     <span {...props}>
-      <RoomIcon style={{ fontSize: 20, color: '#4a6382' }} />
+      <RoomIcon style={{ fontSize: 18, color: '#4a6382' }} />
       {props.children}
     </span>
   );
@@ -59,7 +59,7 @@ function RadiusThumb(props) {
 function RatingThumb(props) {
   return (
     <span {...props}>
-      <StarIcon style={{ fontSize: 20, color: '#f5a623' }} />
+      <StarIcon style={{ fontSize: 18, color: '#f5a623' }} />
       {props.children}
     </span>
   );
@@ -230,9 +230,9 @@ const List = ({
 
         {/* Two sliders, one above the other: distance (searches) and minimum rating (filters instantly) */}
         <div className={classes.sliders}>
-          <div>
+          <div className={classes.sliderRow}>
             <Typography variant="body2" className={classes.sliderLabel}>
-              範圍 <strong>{formatRadius(RADIUS_STEPS[radiusIndex])}</strong>
+              範圍<strong>{shortRadius(RADIUS_STEPS[radiusIndex])}</strong>
             </Typography>
             <Slider
               value={radiusIndex}
@@ -249,9 +249,9 @@ const List = ({
               className={classes.slider}
             />
           </div>
-          <div>
+          <div className={classes.sliderRow}>
             <Typography variant="body2" className={classes.sliderLabel}>
-              評分 <strong>{formatRating(RATING_STEPS[ratingIndex])}</strong>
+              評分<strong>{RATING_STEPS[ratingIndex] ? `${RATING_STEPS[ratingIndex]}★+` : '不限'}</strong>
             </Typography>
             <Slider
               value={ratingIndex}

@@ -42,38 +42,48 @@ export default makeStyles((theme) => ({
   sliders: {
     display: 'grid',
     gridTemplateColumns: '1fr',
-    gap: theme.spacing(0.5),
-    padding: theme.spacing(1.5, 3, 0.5),
-    borderRadius: 16,
+    gap: 0,
+    padding: theme.spacing(0.5, 2, 0),
+    borderRadius: 14,
     background: '#e4e9f0', // soft grey so the raised knobs and sunken tracks read as 3D
   },
+  // Label on the left, slider on the right: one compact row each
+  sliderRow: {
+    display: 'grid',
+    gridTemplateColumns: '52px 1fr',
+    alignItems: 'center',
+    columnGap: theme.spacing(2),
+  },
   sliderLabel: {
-    fontSize: 13,
-    marginLeft: -8,
+    fontSize: 12,
+    lineHeight: 1.25,
+    color: theme.palette.text.secondary,
+    marginTop: -12, // line up with the track, not the track + mark labels
+    '& strong': { display: 'block', fontSize: 14, color: theme.palette.text.primary },
   },
   // Soft 3D (neumorphic) slider: a sunken pill track and a big raised round knob
   slider: {
-    height: 22,
-    padding: '16px 0 28px',
+    height: 16,
+    padding: '14px 0 22px',
     color: '#5b7392', // filled part: slate blue
     '& .MuiSlider-rail': {
-      height: 22,
-      borderRadius: 11,
+      height: 16,
+      borderRadius: 8,
       opacity: 1,
       background: '#dde3ea',
       boxShadow: 'inset 3px 3px 6px rgba(150, 165, 190, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.9)',
     },
     '& .MuiSlider-track': {
-      height: 22,
-      borderRadius: 11,
+      height: 16,
+      borderRadius: 8,
       background: 'linear-gradient(90deg, #7c90aa, #556c8b)',
       boxShadow: 'inset 2px 2px 5px rgba(30, 45, 70, 0.45)',
     },
     '& .MuiSlider-thumb': {
-      width: 40,
-      height: 40,
-      marginTop: -9, // (22 - 40) / 2: centred on the track
-      marginLeft: -20,
+      width: 34,
+      height: 34,
+      marginTop: -9, // (16 - 34) / 2: centred on the track
+      marginLeft: -17,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -89,11 +99,11 @@ export default makeStyles((theme) => ({
       },
     },
     '& .MuiSlider-valueLabel': {
-      left: 4, // centre the bubble over the 40px knob
-      top: -36,
+      left: 1, // centre the bubble over the 34px knob
+      top: -34,
     },
     '& .MuiSlider-mark': { display: 'none' }, // tick dots look odd inside the sunken track
-    '& .MuiSlider-markLabel': { fontSize: 11, top: 46, color: theme.palette.text.secondary },
+    '& .MuiSlider-markLabel': { fontSize: 10, top: 34, color: theme.palette.text.secondary },
   },
   ratingSlider: {
     color: '#f5a623', // value bubble in star colour
