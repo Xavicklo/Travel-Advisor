@@ -38,12 +38,12 @@ export default makeStyles((theme) => ({
     maxWidth: '100%',
   },
 
-  // Distance + rating sliders, side by side
+  // Distance + rating sliders, one above the other
   sliders: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: theme.spacing(2.5),
-    padding: theme.spacing(1, 1.5, 0),
+    gridTemplateColumns: '1fr',
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(1, 2, 0),
     borderRadius: 12,
     background: 'rgba(28, 181, 224, 0.08)',
   },

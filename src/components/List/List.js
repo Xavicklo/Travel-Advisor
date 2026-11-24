@@ -29,16 +29,20 @@ import { FOOD_KEYWORDS } from '../../utils/categories';
 import {
   RADIUS_STEPS, formatRadius, shortRadius, indexForRadius, nextRadiusCovering,
 } from '../../utils/radius';
+import { RATING_STEPS, formatRating, indexForRating } from '../../utils/rating';
 import useStyles from './styles';
 
 // Smallest radius step that reaches the nearest match (and is bigger than the current one).
 const expandTo = (nearest, radiusKm) => nextRadiusCovering(nearest.distanceKm, radiusKm);
 
-// Distance slider marks: label only a few steps so they don't overlap in the narrow panel
-const RADIUS_MARKS = [0.1, 1, 10, 50].map((km) => ({ value: indexForRadius(km), label: shortRadius(km) }));
-// Rating slider: 0 means no minimum ("不限"), then 1-5 stars in half-star steps
-const RATING_MARKS = [{ value: 0, label: '不限' }, { value: 3, label: '3' }, { value: 4, label: '4' }, { value: 5, label: '5' }];
-const formatRating = (value) => (value ? `${value} 星以上` : '不限');
+// Slider marks: label only a few steps so they don't overlap
+const RADIUS_MARKS = [0.1, 0.5, 1, 3, 10, 50].map((km) => ({ value: indexForRadius(km), label: shortRadius(km) }));
+// 不限 and 3 are neighbours, so only 不限 gets a text label there to avoid overlap
+const RATING_MARKS = [
+  { value: indexForRating(0), label: '不限' },
+  { value: indexForRating(3) },
+  ...[4, 4.5, 4.9].map((stars) => ({ value: indexForRating(stars), label: `${stars}` })),
+];
 
 const TYPES = [
   { value: 'restaurants', label: '餐廳', Icon: RestaurantIcon },
@@ -84,12 +88,12 @@ const List = ({
   const [draft, setDraft] = useState(keyword); // what's typed; applied on Enter or chip click
   // Slider positions while dragging. The distance slider moves over step indexes (see utils/radius.js).
   const [radiusIndex, setRadiusIndex] = useState(indexForRadius(radiusKm));
-  const [ratingDraft, setRatingDraft] = useState(rating);
+  const [ratingIndex, setRatingIndex] = useState(indexForRating(rating)); // rating slider also moves over steps
   const [tab, setTab] = useState('results'); // results | favorites
 
   useEffect(() => setDraft(keyword), [keyword]);
   useEffect(() => setRadiusIndex(indexForRadius(radiusKm)), [radiusKm]);
-  useEffect(() => setRatingDraft(rating), [rating]);
+  useEffect(() => setRatingIndex(indexForRating(rating)), [rating]);
 
   const applyKeyword = (value) => setKeyword(value.trim());
 
@@ -204,7 +208,7 @@ const List = ({
           </>
         )}
 
-        {/* Two sliders side by side: distance (searches) and minimum rating (filters instantly) */}
+        {/* Two sliders, one above the other: distance (searches) and minimum rating (filters instantly) */}
         <div className={classes.sliders}>
           <div>
             <Typography variant="body2" className={classes.sliderLabel}>
@@ -226,18 +230,18 @@ const List = ({
           </div>
           <div>
             <Typography variant="body2" className={classes.sliderLabel}>
-              評分 <strong>{formatRating(ratingDraft)}</strong>
+              評分 <strong>{formatRating(RATING_STEPS[ratingIndex])}</strong>
             </Typography>
             <Slider
-              value={ratingDraft}
+              value={ratingIndex}
               min={0}
-              max={5}
-              step={0.5}
+              max={RATING_STEPS.length - 1}
+              step={1}
               marks={RATING_MARKS}
               valueLabelDisplay="auto"
-              valueLabelFormat={(v) => (v ? `${v}★` : '不限')}
-              onChange={(e, v) => setRatingDraft(v)}
-              onChangeCommitted={(e, v) => setRating(v)} // filtering is local, no API call
+              valueLabelFormat={(i) => (RATING_STEPS[i] ? `${RATING_STEPS[i]}★` : '不限')}
+              onChange={(e, i) => setRatingIndex(i)}
+              onChangeCommitted={(e, i) => setRating(RATING_STEPS[i])} // filtering is local, no API call
               aria-label="最低評分"
               className={`${classes.slider} ${classes.ratingSlider}`}
             />
