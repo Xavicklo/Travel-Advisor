@@ -19,7 +19,6 @@ import HistoryIcon from '@material-ui/icons/History';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import SearchIcon from '@material-ui/icons/Search';
 import ClearIcon from '@material-ui/icons/Clear';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import RestaurantIcon from '@material-ui/icons/Restaurant';
 import HotelIcon from '@material-ui/icons/Hotel';
 import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
@@ -130,21 +129,14 @@ const List = ({
   // ---- Details of one place (replaces the list, like Google Maps) ----
   if (selectedPlace) {
     return (
-      <div>
-        <div className={classes.detailBar}>
-          <Button startIcon={<ArrowBackIcon />} onClick={onBack} color="primary">
-            返回結果
-          </Button>
-        </div>
-        <PlaceDetails
-          key={selectedPlace.id}
-          place={selectedPlace}
-          loadDetails={loadDetails}
-          isFavorite={favoriteIds?.has(selectedPlace.id)}
-          onToggleFavorite={onToggleFavorite}
-          variant="panel"
-        />
-      </div>
+      <PlaceDetails
+        key={selectedPlace.id}
+        place={selectedPlace}
+        loadDetails={loadDetails}
+        isFavorite={favoriteIds?.has(selectedPlace.id)}
+        onToggleFavorite={onToggleFavorite}
+        onBack={onBack} // back arrow sits on the photo
+      />
     );
   }
 
