@@ -423,6 +423,11 @@ const App = () => {
         <MapView
           onUserMove={() => !isDesktop && setHeaderCompact(true)}
           onPickCenter={(point) => searchAt(point, '地圖上選的點')} // long-press / right-click
+          onMapClick={() => {
+            // Tap anywhere off the markers: back to the map (place card closed, sheet lowered)
+            setSelectedPlace(null);
+            setSheetSnap('peek');
+          }}
           setChildClicked={(index) => index != null && visiblePlaces[index] && selectPlace(visiblePlaces[index])}
           setCoords={setCoords}
           coords={coords}

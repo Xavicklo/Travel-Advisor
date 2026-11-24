@@ -87,7 +87,7 @@ const PlaceLabel = ({ place, level, classes, selected = false }) => {
 
 const Map = ({
   coords, zoom, places, setCoords, setZoom, setChildClicked, childClicked, weather, userLocation, onMapsLoaded,
-  searchCenter, showSearchHere, onUserMove, onPickCenter, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
+  searchCenter, showSearchHere, onUserMove, onPickCenter, onMapClick, onSearchHere, onLocate, locating, locateError, leftInset = 0, bottomInset = 0,
 }) => {
   const isDesktop = useMediaQuery('(min-width:600px)');
   const classes = useStyles();
@@ -110,6 +110,9 @@ const Map = ({
   // like dropping a pin in Google Maps
   const pickCenterRef = useRef(onPickCenter);
   pickCenterRef.current = onPickCenter;
+  const mapClickRef = useRef(onMapClick);
+  mapClickRef.current = onMapClick;
+  const lastMarkerClick = useRef(0); // a tap on a marker must not also count as a tap on the map
   useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map) return undefined;
@@ -129,6 +132,11 @@ const Map = ({
       map.addListener('dragstart', cancel),
       map.addListener('zoom_changed', cancel),
       map.addListener('contextmenu', (e) => { cancel(); pick(e.latLng); }),
+      // Tap on empty map: close the place card and lower the sheet, like Google Maps
+      map.addListener('click', () => {
+        if (Date.now() - lastPick < 1000 || Date.now() - lastMarkerClick.current < 400) return;
+        if (mapClickRef.current) mapClickRef.current();
+      }),
     ];
     return () => { cancel(); listeners.forEach((l) => maps.event.removeListener(l)); };
   }, [mapReady]);
@@ -165,6 +173,7 @@ const Map = ({
 
   // google-map-react reports clicks by child key: "p-<index>" for places, "c-<n>" for clusters
   const handleChildClick = (key) => {
+    lastMarkerClick.current = Date.now();
     if (key.startsWith('p-')) {
       setChildClicked(Number(key.slice(2)));
     } else if (key.startsWith('c-')) {
@@ -222,7 +231,7 @@ const Map = ({
               lat={place.lat}
               lng={place.lng}
               key={`p-${index}`}
-              onClick={() => setChildClicked(index)} // the label text is clickable too, not just the icon
+              onClick={() => { lastMarkerClick.current = Date.now(); setChildClicked(index); }} // the label text is clickable too
             >
               <PlaceLabel place={place} level={level} classes={classes} />
               {/* Desktop: hovering a bare icon shows its name and stars */}
