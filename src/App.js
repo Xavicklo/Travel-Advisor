@@ -15,6 +15,7 @@ const App = () => {
   const [rating, setRating] = useState('');
 
   const [coords, setCoords] = useState(DEFAULT_COORDS);
+  const [zoom, setZoom] = useState(14);
   const [bounds, setBounds] = useState(null);
 
   const [weather, setWeather] = useState(null);
@@ -113,6 +114,9 @@ const App = () => {
             setBounds={setBounds}
             setCoords={setCoords}
             coords={coords}
+            zoom={zoom}
+            setZoom={setZoom}
+            childClicked={childClicked}
             places={filteredPlaces}
             weather={weather}
             onMapsLoaded={(map) => {
