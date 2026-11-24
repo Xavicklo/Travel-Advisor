@@ -143,7 +143,10 @@ const BottomSheet = ({ snap, onSnapChange, summary, children }) => {
         <div className={classes.bar} />
         <div className={classes.summary}>{summary}</div>
       </div>
-      <div className={classes.body}>{children}</div>
+      {/* Closed: only the handle and the summary line, nothing of the list peeking out */}
+      <div className={classes.body} style={snap === 'peek' && dragHeight == null ? { visibility: 'hidden' } : undefined}>
+        {children}
+      </div>
     </Paper>
   );
 };

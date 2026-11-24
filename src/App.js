@@ -355,7 +355,11 @@ const App = () => {
       type={type}
       setType={setType}
       keyword={keyword}
-      setKeyword={setKeyword}
+      setKeyword={(value) => {
+        setKeyword(value);
+        // Phones have no 搜尋這個區域 button: pressing Enter (or a quick chip) searches the area on screen
+        if (!isDesktop && movedAway) searchAt(coords, '');
+      }}
       rating={rating}
       setRating={setRating}
       radiusKm={radiusKm}
@@ -388,7 +392,7 @@ const App = () => {
           setCoords={setCoords}
           coords={coords}
           searchCenter={searchCenter}
-          showSearchHere={movedAway && mapsLoaded}
+          showSearchHere={isDesktop && movedAway && mapsLoaded} // phones search on Enter instead
           onSearchHere={searchHere}
           onLocate={locateMe}
           locating={locating}
