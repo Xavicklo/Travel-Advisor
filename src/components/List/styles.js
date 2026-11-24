@@ -39,28 +39,51 @@ export default makeStyles((theme) => ({
     maxWidth: '100%',
   },
 
-  // Distance + rating sliders, one above the other
+  // Browser-style tabs for the two filters; the active tab merges into the panel below it
+  filterTabs: {
+    marginTop: theme.spacing(0.5),
+  },
+  tabStrip: {
+    display: 'flex',
+    gap: 2,
+    paddingLeft: 14, // clear the panel's rounded corner so the tab curves sit on a straight edge
+  },
+  filterTab: {
+    position: 'relative',
+    gap: 4,
+    padding: '7px 14px 6px',
+    borderRadius: '10px 10px 0 0',
+    fontSize: 13,
+    color: theme.palette.text.secondary,
+    background: 'transparent',
+    transition: 'background 0.15s ease, color 0.15s ease',
+    '& strong': { color: theme.palette.text.primary },
+    '&:hover': { background: '#eef1f5' },
+  },
+  filterTabActive: {
+    background: '#e4e9f0', // same as the panel: looks attached, like an active browser tab
+    color: theme.palette.text.primary,
+    fontWeight: 600,
+    '&:hover': { background: '#e4e9f0' },
+    // the little outward curves at the tab's bottom corners
+    '&::before, &::after': {
+      content: '""',
+      position: 'absolute',
+      bottom: 0,
+      width: 10,
+      height: 10,
+      background: 'transparent',
+    },
+    '&::before': { left: -10, borderBottomRightRadius: 10, boxShadow: '4px 4px 0 4px #e4e9f0' },
+    '&::after': { right: -10, borderBottomLeftRadius: 10, boxShadow: '-4px 4px 0 4px #e4e9f0' },
+  },
+  filterTabIcon: {
+    fontSize: 16,
+  },
   sliders: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: 0,
-    padding: theme.spacing(0.5, 2, 0),
+    padding: theme.spacing(0.5, 3, 0),
     borderRadius: 14,
     background: '#e4e9f0', // soft grey so the raised knobs and sunken tracks read as 3D
-  },
-  // Label on the left, slider on the right: one compact row each
-  sliderRow: {
-    display: 'grid',
-    gridTemplateColumns: '52px 1fr',
-    alignItems: 'center',
-    columnGap: theme.spacing(2),
-  },
-  sliderLabel: {
-    fontSize: 12,
-    lineHeight: 1.25,
-    color: theme.palette.text.secondary,
-    marginTop: -12, // line up with the track, not the track + mark labels
-    '& strong': { display: 'block', fontSize: 14, color: theme.palette.text.primary },
   },
   // Soft 3D (neumorphic) slider: a sunken pill track and a big raised round knob
   slider: {

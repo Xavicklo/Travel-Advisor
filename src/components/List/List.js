@@ -13,6 +13,7 @@ import {
   Button,
   Tabs,
   Tab,
+  ButtonBase,
 } from '@material-ui/core';
 import HistoryIcon from '@material-ui/icons/History';
 import FavoriteIcon from '@material-ui/icons/Favorite';
@@ -113,6 +114,7 @@ const List = ({
   const [radiusIndex, setRadiusIndex] = useState(indexForRadius(radiusKm));
   const [ratingIndex, setRatingIndex] = useState(indexForRating(rating)); // rating slider also moves over steps
   const [tab, setTab] = useState('results'); // results | favorites
+  const [sliderTab, setSliderTab] = useState('radius'); // which filter slider is showing
 
   useEffect(() => setDraft(keyword), [keyword]);
   useEffect(() => setRadiusIndex(indexForRadius(radiusKm)), [radiusKm]);
@@ -212,45 +214,60 @@ const List = ({
             )}
         </>
 
-        {/* Two sliders, one above the other: distance (searches) and minimum rating (filters instantly) */}
-        <div className={classes.sliders}>
-          <div className={classes.sliderRow}>
-            <Typography variant="body2" className={classes.sliderLabel}>
-              範圍<strong>{shortRadius(RADIUS_STEPS[radiusIndex])}</strong>
-            </Typography>
-            <Slider
-              value={radiusIndex}
-              min={0}
-              max={RADIUS_STEPS.length - 1}
-              step={1}
-              marks={RADIUS_MARKS}
-              valueLabelDisplay="auto"
-              valueLabelFormat={(i) => shortRadius(RADIUS_STEPS[i])}
-              onChange={(e, i) => setRadiusIndex(i)} // move the thumb smoothly...
-              onChangeCommitted={(e, i) => setRadiusKm(RADIUS_STEPS[i])} // ...but only search when released
-              aria-label="搜尋範圍"
-              ThumbComponent={RadiusThumb}
-              className={classes.slider}
-            />
+        {/* Range and rating as browser-style tabs: only the chosen slider is shown, saving space */}
+        <div className={classes.filterTabs}>
+          <div className={classes.tabStrip} role="tablist">
+            <ButtonBase
+              role="tab"
+              aria-selected={sliderTab === 'radius'}
+              className={`${classes.filterTab} ${sliderTab === 'radius' ? classes.filterTabActive : ''}`}
+              onClick={() => setSliderTab('radius')}
+            >
+              <RoomIcon className={classes.filterTabIcon} style={{ color: '#4a6382' }} />
+              範圍 <strong>{shortRadius(RADIUS_STEPS[radiusIndex])}</strong>
+            </ButtonBase>
+            <ButtonBase
+              role="tab"
+              aria-selected={sliderTab === 'rating'}
+              className={`${classes.filterTab} ${sliderTab === 'rating' ? classes.filterTabActive : ''}`}
+              onClick={() => setSliderTab('rating')}
+            >
+              <StarIcon className={classes.filterTabIcon} style={{ color: '#f5a623' }} />
+              評分 <strong>{RATING_STEPS[ratingIndex] ? `${RATING_STEPS[ratingIndex]}★+` : '不限'}</strong>
+            </ButtonBase>
           </div>
-          <div className={classes.sliderRow}>
-            <Typography variant="body2" className={classes.sliderLabel}>
-              評分<strong>{RATING_STEPS[ratingIndex] ? `${RATING_STEPS[ratingIndex]}★+` : '不限'}</strong>
-            </Typography>
-            <Slider
-              value={ratingIndex}
-              min={0}
-              max={RATING_STEPS.length - 1}
-              step={1}
-              marks={RATING_MARKS}
-              valueLabelDisplay="auto"
-              valueLabelFormat={(i) => (RATING_STEPS[i] ? `${RATING_STEPS[i]}★` : '不限')}
-              onChange={(e, i) => setRatingIndex(i)}
-              onChangeCommitted={(e, i) => setRating(RATING_STEPS[i])} // filtering is local, no API call
-              aria-label="最低評分"
-              ThumbComponent={RatingThumb}
-              className={`${classes.slider} ${classes.ratingSlider}`}
-            />
+          <div className={classes.sliders} role="tabpanel">
+            {sliderTab === 'radius' ? (
+              <Slider
+                value={radiusIndex}
+                min={0}
+                max={RADIUS_STEPS.length - 1}
+                step={1}
+                marks={RADIUS_MARKS}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(i) => shortRadius(RADIUS_STEPS[i])}
+                onChange={(e, i) => setRadiusIndex(i)} // move the thumb smoothly...
+                onChangeCommitted={(e, i) => setRadiusKm(RADIUS_STEPS[i])} // ...but only search when released
+                aria-label="搜尋範圍"
+                ThumbComponent={RadiusThumb}
+                className={classes.slider}
+              />
+            ) : (
+              <Slider
+                value={ratingIndex}
+                min={0}
+                max={RATING_STEPS.length - 1}
+                step={1}
+                marks={RATING_MARKS}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(i) => (RATING_STEPS[i] ? `${RATING_STEPS[i]}★` : '不限')}
+                onChange={(e, i) => setRatingIndex(i)}
+                onChangeCommitted={(e, i) => setRating(RATING_STEPS[i])} // filtering is local, no API call
+                aria-label="最低評分"
+                ThumbComponent={RatingThumb}
+                className={`${classes.slider} ${classes.ratingSlider}`}
+              />
+            )}
           </div>
         </div>
       </div>
