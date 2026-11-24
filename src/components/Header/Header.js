@@ -2,6 +2,7 @@ import React from 'react';
 import { Autocomplete } from '@react-google-maps/api';
 import { AppBar, Toolbar, Typography, InputBase, Box } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
+import ExploreIcon from '@material-ui/icons/Explore';
 
 import useStyles from './styles';
 
@@ -29,9 +30,16 @@ const Header = ({ onPlaceChanged, onLoad, mapsLoaded }) => {
     <AppBar position="static">
       <Toolbar className={classes.toolbar}>
         <Box>
-          <Typography variant="h5" className={classes.brand}>
-            Travel Advisor
-          </Typography>
+          {/* Wordmark: compass badge + two-weight "Travel Advisor" */}
+          <a href="/" className={classes.brand} aria-label="Travel Advisor 首頁">
+            <span className={classes.badge}>
+              <ExploreIcon className={classes.compass} />
+            </span>
+            <span className={classes.wordmark}>
+              <span className={classes.wordBold}>Travel</span>
+              <span className={classes.wordLight}>Advisor</span>
+            </span>
+          </a>
           <Typography variant="body2" className={classes.subtitle}>
             探索附近的餐廳、住宿與景點
           </Typography>

@@ -29,12 +29,55 @@ export default makeStyles((theme) => ({
     padding: theme.spacing(1.5, 3),
     [theme.breakpoints.down('xs')]: { padding: theme.spacing(1.5, 2) },
   },
+  // ---- Wordmark ----
   brand: {
-    fontWeight: 600,
-    letterSpacing: 0.5,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 12,
+    color: theme.palette.common.white,
+    textDecoration: 'none',
+    '&:hover $compass': { transform: 'rotate(45deg)' }, // the compass needle swings on hover
+    '&:hover $badge': { boxShadow: `0 0 0 6px ${alpha('#ffffff', 0.18)}, 0 6px 16px ${alpha('#000046', 0.4)}` },
+  },
+  badge: {
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #ffd166 0%, #ff8a5b 100%)', // warm "sunset" accent against the blue bar
+    boxShadow: `0 0 0 4px ${alpha('#ffffff', 0.15)}, 0 4px 12px ${alpha('#000046', 0.35)}`,
+    transition: theme.transitions.create('box-shadow', { duration: theme.transitions.duration.short }),
+  },
+  compass: {
+    fontSize: 28,
+    color: '#0b1d4d',
+    transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)', // slight overshoot, like a real needle
+  },
+  wordmark: {
+    fontFamily: '"Poppins", "Roboto", sans-serif',
+    fontSize: 28,
+    lineHeight: 1,
+    letterSpacing: '-0.5px',
+    textShadow: `0 2px 8px ${alpha('#000046', 0.35)}`,
+    [theme.breakpoints.down('xs')]: { fontSize: 22 },
+  },
+  wordBold: {
+    fontWeight: 800,
+  },
+  wordLight: {
+    fontWeight: 300,
+    marginLeft: 6,
+    background: 'linear-gradient(90deg, #ffffff 0%, #ffd166 100%)', // fades into the badge's warm colour
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
   },
   subtitle: {
     opacity: 0.85,
+    marginTop: 4,
+    marginLeft: 54, // line up with the text, after the badge
     [theme.breakpoints.down('xs')]: { display: 'none' },
   },
   searchWrap: {
