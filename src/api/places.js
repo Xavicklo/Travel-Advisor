@@ -64,11 +64,14 @@ export const getPlacesData = (map, type, area, keyword = '') => {
   const { maps } = window.google;
   const service = new maps.places.PlacesService(map);
 
-  const request = {
-    location: area.center,
-    radius: Math.min(area.radiusKm * 1000, MAX_RADIUS_M),
-    type: PLACE_TYPES[type],
-  };
+  // Convenience stores: the nearest ones matter, not the most famous. Google ranks by
+  // prominence by default and returns 20 at a time, so in a dense area the 7-11 next door
+  // could miss the cut. rankBy DISTANCE returns the closest first (it can't take a radius;
+  // results outside the circle are filtered out below).
+  const byDistance = type === 'stores';
+  const request = byDistance
+    ? { location: area.center, rankBy: maps.places.RankBy.DISTANCE, type: PLACE_TYPES[type] }
+    : { location: area.center, radius: Math.min(area.radiusKm * 1000, MAX_RADIUS_M), type: PLACE_TYPES[type] };
   if (keyword.trim()) request.keyword = keyword.trim();
 
   const toPlaces = (results) => results
